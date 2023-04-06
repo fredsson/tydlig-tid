@@ -30,6 +30,7 @@ export default function App() {
 
   return (
     <>
+      <h1>Tydlig Tid</h1>
       <StartTime onChange={setStartTime} />
       <LunchTime onChange={setLunchTime} />
       Total Hours: {totalTime}

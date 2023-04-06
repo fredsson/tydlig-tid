@@ -1,14 +1,16 @@
 {
   "name": "tydlig-tid",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite --port 4200",
     "build": "tsc && vite build",
+    "watch": "tsc && vite build --watch",
     "preview": "vite preview"
   },
   "dependencies": {
+    "dayjs": "^1.11.7",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

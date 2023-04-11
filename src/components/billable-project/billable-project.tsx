@@ -1,5 +1,7 @@
 import { ChangeEvent, useState } from "react";
 
+import styles from './billable-porject.module.css';
+
 interface Project {
   id: number,
   name: string;
@@ -31,9 +33,9 @@ export default function BillableProject({onChange}: {onChange: (project: Project
 
   return (
     <>
-      <div className="input-container">
+      <div className={styles['project__row']}>
         <label>Current Project: {project?.name ?? '-'}</label>
-        <button onClick={handleStartButtonClicked} className='start-btn'>Edit</button>
+        <button onClick={handleStartButtonClicked} className={styles['project__edit-btn']}>Edit</button>
       </div>
       { editingProject ? <>
         <select value={project?.id} onChange={selected => handleEditProject(selected)}>{(project == undefined ? [<option key={0}>Please Select</option>] : []).concat(existingProjects.map(p => <option key={p.id} value={p.id}>{p.name}</option>))}</select>  

@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import * as dayjs from 'dayjs'
+import {default as createDate, Dayjs} from 'dayjs';
 import './app.css'
 import StartTime from '../start-time/start-time';
 import LunchTime from '../lunch-time/lunch-time';
 import BillableProject from '../billable-project/billable-project';
 
-function calculateTotalHoursWorked(startTime: dayjs.Dayjs | undefined, now: dayjs.Dayjs, lunchTimeInMinutes: number) {
+function calculateTotalHoursWorked(startTime: Dayjs | undefined, now: Dayjs, lunchTimeInMinutes: number) {
   if (!startTime) {
     return 0;
   }
@@ -16,15 +16,15 @@ function calculateTotalHoursWorked(startTime: dayjs.Dayjs | undefined, now: dayj
 }
 
 export default function App() {
-  const [startTime, setStartTime] = useState<dayjs.Dayjs | undefined>(undefined);
+  const [startTime, setStartTime] = useState<Dayjs | undefined>(undefined);
   const [lunchTimeInMinutes, setLunchTime] = useState<number | undefined>(10);
   const [totalTimeInHours, setTotalTime] = useState<number | undefined>(undefined);
   const [currentProject, setProject] = useState<{name: string} | undefined>(undefined);
 
   useEffect(() => {
-    setTotalTime(calculateTotalHoursWorked(startTime, dayjs(), lunchTimeInMinutes ?? 0))
+    setTotalTime(calculateTotalHoursWorked(startTime, createDate(), lunchTimeInMinutes ?? 0));
     const timerId = setInterval(() => {
-      setTotalTime(calculateTotalHoursWorked(startTime, dayjs(), lunchTimeInMinutes ?? 0))
+      setTotalTime(calculateTotalHoursWorked(startTime, createDate(), lunchTimeInMinutes ?? 0))
     }, 60 * 1000);
 
     return () => {
@@ -33,14 +33,24 @@ export default function App() {
   }, [startTime, lunchTimeInMinutes]);
 
   return (
-    <>
-      <h1>Tydlig Tid</h1>
-      <StartTime onChange={setStartTime} disabled={!currentProject} />
-      <LunchTime onChange={setLunchTime} />
-      <BillableProject onChange={setProject} />
-      <div>Total Hours: {totalTimeInHours}</div>
-      
-      
-    </>
+    <div className='main-layout'>
+      <aside>Test</aside>
+      <div>
+        <h1>Tydlig Tid</h1>
+        <div className='section'>
+          <StartTime onChange={setStartTime} disabled={!currentProject} />
+        </div>
+        <div className='section'>
+          <LunchTime onChange={setLunchTime} />
+        </div>
+        <div className='section'>
+          <BillableProject onChange={setProject} />
+        </div>
+        <div className='section'>
+          <div>Total Hours: {totalTimeInHours}</div>
+        </div>
+      </div>
+      <aside>Test 2</aside>
+    </div>
   )
 }

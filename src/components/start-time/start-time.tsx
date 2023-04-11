@@ -1,19 +1,19 @@
 import { useState } from "react";
-import * as dayjs from 'dayjs'
+import {default as createDate, Dayjs} from 'dayjs';
 import TimeInput from "../time-input/time-input";
 
 interface StartTimeProps {
   disabled: boolean;
-  onChange(e: dayjs.Dayjs | undefined): void
+  onChange(e: Dayjs | undefined): void
 }
 
 export default function StartTime({disabled, onChange}: StartTimeProps) {
-  const [startTime, setStartTime] = useState<dayjs.Dayjs | undefined>(undefined);
+  const [startTime, setStartTime] = useState<Dayjs | undefined>(undefined);
   const [editingStartTime, setEditingStartTime] = useState(false);
   
   const handleStartButtonClicked = () => {
     if (!startTime) {
-      const date = dayjs();
+      const date = createDate();
       setStartTime(date);
       onChange(date);
     } else {
@@ -22,7 +22,7 @@ export default function StartTime({disabled, onChange}: StartTimeProps) {
   };
 
   
-  const handleEditStartTime = (newTime: dayjs.Dayjs | undefined) => {
+  const handleEditStartTime = (newTime: Dayjs | undefined) => {
     setStartTime(newTime);
     onChange(newTime);
     setEditingStartTime(false);

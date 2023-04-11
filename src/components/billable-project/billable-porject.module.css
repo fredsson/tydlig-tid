@@ -1,0 +1,8 @@
+
+.project__row {
+  composes: row from "../../styles/containers";
+}
+
+.project__edit-btn {
+  composes: edit-btn from "../../styles/btn";
+}

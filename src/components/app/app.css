@@ -5,6 +5,12 @@
   text-align: center;
 }
 
+.main-layout {
+  display: flex;
+  flex-direction: row;
+  gap: 5rem;
+}
+
 .input-container {
   display: flex;
   flex-direction: row;
@@ -44,4 +50,8 @@
 
 .start-btn:active {
   background-color: #218838;
+}
+
+.section + .section {
+  margin-top: 2rem;
 }

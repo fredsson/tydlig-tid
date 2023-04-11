@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
-import * as dayjs from 'dayjs'
+import {default as createDate, Dayjs} from 'dayjs';
 
-let startOfLunch: dayjs.Dayjs | undefined;
+let startOfLunch: Dayjs | undefined;
 
 interface LunchTimeProps {
   onChange(e: number): void; 
@@ -20,9 +20,9 @@ export default function LunchTime({onChange}: LunchTimeProps) {
     }
 
     if (!eatingLunch) {
-      startOfLunch = dayjs();
+      startOfLunch = createDate();
     } else {
-      const elapsedTime = dayjs().diff(startOfLunch, 'minutes')
+      const elapsedTime = createDate().diff(startOfLunch, 'minutes')
       setLunchTime(elapsedTime);
       onChange(elapsedTime);
     }

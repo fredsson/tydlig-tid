@@ -1,12 +1,13 @@
 import { useState } from "react";
-import * as dayjs from 'dayjs';
+import {default as createDate, Dayjs} from 'dayjs';
+
 
 interface TimeInputProps {
-  onChange: (e: dayjs.Dayjs) => void;
+  onChange: (e: Dayjs) => void;
 }
 
 export default function TimeInput({onChange}: TimeInputProps) {
-  const [value, setValue] = useState<{time: dayjs.Dayjs | undefined, valid: boolean}>({time: undefined, valid: false});
+  const [value, setValue] = useState<{time: Dayjs | undefined, valid: boolean}>({time: undefined, valid: false});
 
   const handleInputChanged = (e: React.ChangeEvent<HTMLInputElement>) => {
     const [hours, minutes] = e.target.value.split(':');
@@ -16,7 +17,7 @@ export default function TimeInput({onChange}: TimeInputProps) {
       return;
     }
 
-    const inputTime = dayjs().startOf('day')
+    const inputTime = createDate().startOf('day')
       .add(+hours, 'hours')
       .add(+minutes, 'minutes');
 

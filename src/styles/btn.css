@@ -1,0 +1,21 @@
+
+.edit-btn {
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  color: #fff;
+  background-color: #28a745;
+  border-radius: 8px;
+  border: 0;
+  padding: 0.6em 1.2em;
+  cursor: pointer;
+  transition: background-color 0.25s;
+}
+
+.edit-btn:hover, .edit-btn:active {
+  background-color: #218838;
+}
+
+.start-btn:disabled {
+  background-color: grey;
+}

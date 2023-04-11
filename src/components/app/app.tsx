@@ -38,7 +38,8 @@ export default function App() {
       <StartTime onChange={setStartTime} disabled={!currentProject} />
       <LunchTime onChange={setLunchTime} />
       <BillableProject onChange={setProject} />
-      Total Hours: {totalTimeInHours}
+      <div>Total Hours: {totalTimeInHours}</div>
+      
       
     </>
   )

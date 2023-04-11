@@ -39,7 +39,7 @@ export default function LunchTime({onChange}: LunchTimeProps) {
     <>
       <div className="input-container">
         <label>Lunch: {lunchTimeInMinutes ?? '-'} (Min)</label>
-        <button onClick={handleEatingLunch}>{ lunchTimeInMinutes != undefined ? 'edit' : eatingLunch ? 'Stop' : 'Start Lunch!'}</button>
+        <button onClick={handleEatingLunch} className='start-btn'>{ lunchTimeInMinutes != undefined ? 'Edit' : eatingLunch ? 'Stop' : 'Start Lunch!'}</button>
       </div>
       {editingLunchTime ? <div><input onChange={e => editLunchRef.current = +e.target.value} type="number" /><button onClick={handleLunchTimeChanged}>Confirm</button></div> : ''}
     </>

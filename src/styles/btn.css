@@ -16,6 +16,6 @@
   background-color: #218838;
 }
 
-.start-btn:disabled {
-  background-color: grey;
+.edit-btn:disabled {
+  background-color: grey !important;
 }

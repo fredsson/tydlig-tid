@@ -1,5 +1,7 @@
 import { useRef, useState } from "react";
 import {default as createDate, Dayjs} from 'dayjs';
+import styles from './lunch-time.module.css';
+
 
 let startOfLunch: Dayjs | undefined;
 
@@ -37,9 +39,9 @@ export default function LunchTime({onChange}: LunchTimeProps) {
 
   return (
     <>
-      <div className="input-container">
+      <div className={styles['lunch-time__row']}>
         <label>Lunch: {lunchTimeInMinutes ?? '-'} (Min)</label>
-        <button onClick={handleEatingLunch} className='start-btn'>{ lunchTimeInMinutes != undefined ? 'Edit' : eatingLunch ? 'Stop' : 'Start Lunch!'}</button>
+        <button onClick={handleEatingLunch} className={styles['lunch-time__edit-btn']}>{ lunchTimeInMinutes != undefined ? 'Edit' : eatingLunch ? 'Stop' : 'Start Lunch!'}</button>
       </div>
       {editingLunchTime ? <div><input onChange={e => editLunchRef.current = +e.target.value} type="number" /><button onClick={handleLunchTimeChanged}>Confirm</button></div> : ''}
     </>

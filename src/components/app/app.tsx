@@ -5,6 +5,28 @@ import StartTime from '../start-time/start-time';
 import LunchTime from '../lunch-time/lunch-time';
 import BillableProject from '../billable-project/billable-project';
 
+// TODO this needs to be generated when using tydlig-tid and stored in localstorage (possible to download/load as well)
+const projectEntries = [
+  {startTime: createDate('2023-04-11T08:40'), endTime: createDate('2023-04-11T12:00'), project: {name: 'Internal'}},
+  {startTime: createDate('2023-04-11T12:00'), endTime: createDate('2023-04-11T13:00'), project: {name: 'Lunch'}},
+  {startTime: createDate('2023-04-11T13:00'), endTime: createDate('2023-04-11T15:00'), project: {name: 'Volvo'}},
+  {startTime: createDate('2023-04-11T15:00'), endTime: createDate('2023-04-11T18:00'), project: {name: 'Internal'}},
+];
+
+const lunchEntry = projectEntries.find(v => v.project.name === 'Lunch');
+
+const beforeLunch = projectEntries.filter(b => b.startTime.isBefore(lunchEntry?.startTime));
+const afterLunch = projectEntries.filter(b => b.startTime.isAfter(lunchEntry?.startTime));
+
+const totalBeforeLunch = 4 * 60;
+const totalAfterLunch = afterLunch.reduce((prev, cur) => prev + cur.endTime.diff(cur.startTime, 'minutes'), 0);
+
+const colorsByProject: Record<string, string> = {
+  'Internal': '#28a745',
+  'Volvo': '#c8d4e1',
+  'Lunch': 'red',
+};
+
 function calculateTotalHoursWorked(startTime: Dayjs | undefined, now: Dayjs, lunchTimeInMinutes: number) {
   if (!startTime) {
     return 0;
@@ -34,7 +56,21 @@ export default function App() {
 
   return (
     <div className='main-layout'>
-      <aside>Test</aside>
+      <aside>
+        <div>Timeline</div>
+        <div className='timeline'>
+          <div className='timeline__legend'>
+            <div className='legend__item'><div style={{width: '5px', height: '5px', backgroundColor: colorsByProject['Lunch']}} />Lunch</div>
+            <div className='legend__item'><div style={{width: '5px', height: '5px', backgroundColor: colorsByProject['Internal']}} />Internal</div>
+            <div className='legend__item'><div style={{width: '5px', height: '5px', backgroundColor: colorsByProject['Volvo']}} />Volvo</div>
+          </div>
+          <div className='timeline__content'>
+            <div style={{height: '47%', display: 'flex', flexDirection: 'column', justifyContent: 'end'}}>{beforeLunch.map((b, i) => <div key={i} style={{height: `${(b.endTime.diff(b.startTime, 'minutes') / totalBeforeLunch) * 100}%`, backgroundColor: colorsByProject[b.project.name]}}></div>)}</div>
+            <div style={{height: '6%', backgroundColor: 'red'}}></div>
+            <div style={{height: '47%'}}>{afterLunch.map((b, i) => <div key={i} style={{height: `${(b.endTime.diff(b.startTime, 'minutes') / totalAfterLunch) * 100}%`, backgroundColor: colorsByProject[b.project.name]}}></div>)}</div>
+          </div>
+        </div>
+      </aside>
       <div>
         <h1>Tydlig Tid</h1>
         <div className='section'>

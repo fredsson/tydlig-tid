@@ -3,10 +3,11 @@ import * as dayjs from 'dayjs'
 import TimeInput from "../time-input/time-input";
 
 interface StartTimeProps {
+  disabled: boolean;
   onChange(e: dayjs.Dayjs | undefined): void
 }
 
-export default function StartTime({onChange}: StartTimeProps) {
+export default function StartTime({disabled, onChange}: StartTimeProps) {
   const [startTime, setStartTime] = useState<dayjs.Dayjs | undefined>(undefined);
   const [editingStartTime, setEditingStartTime] = useState(false);
   
@@ -32,7 +33,7 @@ export default function StartTime({onChange}: StartTimeProps) {
     <>
       <div className="input-container">
         <label>Started: {startTime?.format('HH:mm') ?? '-'}</label>
-        <button onClick={handleStartButtonClicked} className='start-btn'>{startTime == undefined ? 'Start Your Day!': 'Edit'}</button>
+        <button onClick={handleStartButtonClicked} disabled={disabled} className='start-btn'>{startTime == undefined ? 'Start Your Day!': 'Edit'}</button>
       </div>
       { editingStartTime ? <TimeInput onChange={handleEditStartTime} /> : ''}
     </>

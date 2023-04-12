@@ -4,6 +4,7 @@ import './app.css'
 import StartTime from '../start-time/start-time';
 import LunchTime from '../lunch-time/lunch-time';
 import BillableProject from '../billable-project/billable-project';
+import { StateRecorder } from '../../services/state-recorder';
 
 // TODO this needs to be generated when using tydlig-tid and stored in localstorage (possible to download/load as well)
 const projectEntries = [
@@ -37,22 +38,37 @@ function calculateTotalHoursWorked(startTime: Dayjs | undefined, now: Dayjs, lun
   return Math.round(totalHoursWithLunch * 10) / 10;
 }
 
+const stateRecorder = new StateRecorder();
+
 export default function App() {
   const [startTime, setStartTime] = useState<Dayjs | undefined>(undefined);
   const [lunchTimeInMinutes, setLunchTime] = useState<number | undefined>(10);
   const [totalTimeInHours, setTotalTime] = useState<number | undefined>(undefined);
-  const [currentProject, setProject] = useState<{name: string} | undefined>(undefined);
+  const [currentProject, setProject] = useState<{name: string, id: number} | undefined>(undefined);
 
   useEffect(() => {
     setTotalTime(calculateTotalHoursWorked(startTime, createDate(), lunchTimeInMinutes ?? 0));
     const timerId = setInterval(() => {
-      setTotalTime(calculateTotalHoursWorked(startTime, createDate(), lunchTimeInMinutes ?? 0))
+      const currentTime = createDate();
+      stateRecorder.updateCurrentProject(currentTime);
+      setTotalTime(calculateTotalHoursWorked(startTime, currentTime, lunchTimeInMinutes ?? 0)); 
     }, 60 * 1000);
 
     return () => {
       clearInterval(timerId);
     }
   }, [startTime, lunchTimeInMinutes]);
+
+  const handleStartDay = (time: Dayjs) => {
+    if (currentProject) {
+      if (!startTime) {
+        stateRecorder.startDay(currentProject.id, time);
+      } else {
+        stateRecorder.changeStartTime(time);
+      }
+    }
+    setStartTime(time);
+  };
 
   return (
     <div className='main-layout'>
@@ -74,7 +90,7 @@ export default function App() {
       <div>
         <h1>Tydlig Tid</h1>
         <div className='section'>
-          <StartTime onChange={setStartTime} disabled={!currentProject} />
+          <StartTime onChange={handleStartDay} disabled={!currentProject} />
         </div>
         <div className='section'>
           <LunchTime onChange={setLunchTime} />

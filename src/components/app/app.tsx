@@ -70,6 +70,11 @@ export default function App() {
     setStartTime(time);
   };
 
+  const handleLunchTimeChanged = (lunchTimeInMinutes: number) => {
+    setLunchTime(lunchTimeInMinutes);
+    stateRecorder.updateLunch(lunchTimeInMinutes);
+  };
+
   const handleProjectChanged = (project: {name: string, id: number}) => {
     if (startTime) {
       stateRecorder.changeProject(project.id, createDate());
@@ -100,7 +105,7 @@ export default function App() {
           <StartTime onChange={handleStartDay} disabled={!currentProject} />
         </div>
         <div className='section'>
-          <LunchTime onChange={setLunchTime} />
+          <LunchTime onChange={handleLunchTimeChanged} />
         </div>
         <div className='section'>
           <BillableProject onChange={handleProjectChanged} />

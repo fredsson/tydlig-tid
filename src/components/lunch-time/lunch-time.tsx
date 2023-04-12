@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {default as createDate, Dayjs} from 'dayjs';
 import styles from './lunch-time.module.css';
 
@@ -15,8 +15,32 @@ export default function LunchTime({onChange}: LunchTimeProps) {
   const [editingLunchTime, setEditingLunchTime] = useState<boolean>(false);
   const editLunchRef = useRef(0);
 
+  const updateLunchTime = () => {
+    const diff = createDate().diff(startOfLunch, 'minutes');
+    setLunchTime(diff);
+    return diff;
+  };
+
+  const canEdit = lunchTimeInMinutes != undefined && !eatingLunch;
+
+  useEffect(() => {
+    if (eatingLunch) {
+      updateLunchTime();
+      console.log('hello?');
+      const id = setInterval(() => {
+        console.log('hello 2?');
+
+        updateLunchTime();
+      }, 60 * 1000);
+      return () => {
+        return clearInterval(id);
+      }
+    }
+
+  }, [eatingLunch]);
+
   const handleEatingLunch = () => {
-    if (lunchTimeInMinutes != undefined) {
+    if (canEdit) {
       setEditingLunchTime(true);
       return;
     }
@@ -24,8 +48,7 @@ export default function LunchTime({onChange}: LunchTimeProps) {
     if (!eatingLunch) {
       startOfLunch = createDate();
     } else {
-      const elapsedTime = createDate().diff(startOfLunch, 'minutes')
-      setLunchTime(elapsedTime);
+      const elapsedTime = updateLunchTime();
       onChange(elapsedTime);
     }
     setEatingLunch(p => !p);
@@ -41,7 +64,7 @@ export default function LunchTime({onChange}: LunchTimeProps) {
     <>
       <div className={styles['lunch-time__row']}>
         <label>Lunch: {lunchTimeInMinutes ?? '-'} (Min)</label>
-        <button onClick={handleEatingLunch} className={styles['lunch-time__edit-btn']}>{ lunchTimeInMinutes != undefined ? 'Edit' : eatingLunch ? 'Stop' : 'Start Lunch!'}</button>
+        <button onClick={handleEatingLunch} className={styles['lunch-time__edit-btn']}>{ canEdit ? 'Edit' : eatingLunch ? 'Stop' : 'Start Lunch!'}</button>
       </div>
       {editingLunchTime ? <div><input onChange={e => editLunchRef.current = +e.target.value} type="number" /><button onClick={handleLunchTimeChanged}>Confirm</button></div> : ''}
     </>

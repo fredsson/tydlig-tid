@@ -60,6 +60,24 @@ export class StateRecorder {
     this.save();
   }
 
+  public changeProject(projectId: number, startTime: Dayjs) {
+    if (!this.state) {
+      return;
+    }
+    if (this.currentProject) {
+      this.currentProject.endTime = startTime.format('HH:mm');
+    }
+
+    const entry: TimelineEntry = {
+      startTime: startTime.format('HH:mm'),
+      endTime: startTime.format('HH:mm'),
+      projectId
+    };
+    this.state.timelines[startTime.format('YYYY-MM-DD')].push(entry);
+    this.currentProject = entry;
+
+    this.save();
+  }
   private save(): void {
     if (this.state) {
       localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(this.state));

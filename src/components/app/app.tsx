@@ -70,6 +70,13 @@ export default function App() {
     setStartTime(time);
   };
 
+  const handleProjectChanged = (project: {name: string, id: number}) => {
+    if (startTime) {
+      stateRecorder.changeProject(project.id, createDate());
+    }
+    setProject(project);
+  };
+
   return (
     <div className='main-layout'>
       <aside>
@@ -96,7 +103,7 @@ export default function App() {
           <LunchTime onChange={setLunchTime} />
         </div>
         <div className='section'>
-          <BillableProject onChange={setProject} />
+          <BillableProject onChange={handleProjectChanged} />
         </div>
         <div className='section'>
           <div>Total Hours: {totalTimeInHours}</div>

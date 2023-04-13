@@ -38,7 +38,7 @@ function calculateTotalHoursWorked(startTime: Dayjs | undefined, now: Dayjs, lun
   return Math.round(totalHoursWithLunch * 10) / 10;
 }
 
-const stateRecorder = new StateRecorder();
+const stateRecorder = new StateRecorder(localStorage, createDate);
 
 export default function App() {
   const [startTime, setStartTime] = useState<Dayjs | undefined>(undefined);

@@ -1,6 +1,11 @@
-import {default as createDate, Dayjs} from 'dayjs';
+import { Dayjs } from 'dayjs';
 
 const LOCALSTORAGE_KEY = "tydlig_tid_data";
+
+export interface RecorderStorage {
+  getItem(key: string): string | null;
+  setItem(key: string, content: string): void;
+}
 
 interface TimelineEntry {
   startTime: string;
@@ -28,7 +33,7 @@ export class StateRecorder {
   private state: AppState | undefined = undefined;
   private currentProject: TimelineEntry | undefined  = undefined;
 
-  constructor() {
+  constructor(private storage: RecorderStorage, private createDate: (date?: string) => Dayjs) {
     this.load();
   }
 
@@ -44,8 +49,6 @@ export class StateRecorder {
     this.state.timelines[startTime.format('YYYY-MM-DD')] = [
       this.currentProject
     ];
-
-    this.ensureLunchEntry(startTime);
 
     this.save();
   }
@@ -100,7 +103,7 @@ export class StateRecorder {
     if (!lunchProject) {
       return;
     }
-    const timeline = this.state.timelines[createDate().format('YYYY-MM-DD')];
+    const timeline = this.state.timelines[this.createDate().format('YYYY-MM-DD')];
     const hasLunchEntry = timeline.some(e => e.projectId === lunchProject.id);
     if (hasLunchEntry) {
       return;
@@ -134,14 +137,14 @@ export class StateRecorder {
       return;
     }
 
-    const now = createDate();
+    const now = this.createDate();
     const timeline = this.state.timelines[now.format('YYYY-MM-DD')];
     const lunchEntryIndex = timeline.findIndex(e => e.projectId === lunchProject.id);
     if (!lunchEntryIndex) {
       return;
     }
 
-    const lunchEndTime = createDate().startOf('day').set('hours', 12).add(timeInMinutes, 'minutes');
+    const lunchEndTime = this.createDate().startOf('day').set('hours', 12).add(timeInMinutes, 'minutes');
     timeline[lunchEntryIndex].endTime = lunchEndTime.format('HH:mm');         
     if (timeline[lunchEntryIndex + 1]) {
       timeline[lunchEntryIndex + 1].startTime = lunchEndTime.format('HH:mm');
@@ -167,7 +170,7 @@ export class StateRecorder {
   public importFromFile(fileContent: string): void {
     this.state = JSON.parse(fileContent);
 
-    const timeline = this.state?.timelines[createDate().format('YYYY-MM-DD')];
+    const timeline = this.state?.timelines[this.createDate().format('YYYY-MM-DD')];
     if (timeline && timeline.length) {
       this.currentProject = timeline[timeline.length - 1];
     }
@@ -180,7 +183,7 @@ export class StateRecorder {
       return undefined;
     }
   
-    const dateToday = createDate().format('YYYY-MM-DD');
+    const dateToday = this.createDate().format('YYYY-MM-DD');
 
     const timeline = this.state?.timelines[dateToday];
     if (!timeline) {
@@ -189,13 +192,13 @@ export class StateRecorder {
 
 
 
-    const startTime = createDate(`${dateToday}T${timeline[0].startTime}`);
+    const startTime = this.createDate(`${dateToday}T${timeline[0].startTime}`);
 
     const lunchProject = this.state?.projects.find(p => p.name === 'Lunch');
     const lunchEntry = timeline.find(e => e.projectId === lunchProject?.id);
 
 
-    const lunchTimeInMinutes = lunchEntry ? createDate(`${dateToday}T${lunchEntry.endTime}`).diff(createDate(`${dateToday}T${lunchEntry.startTime}`), 'minutes') : 0;
+    const lunchTimeInMinutes = lunchEntry ? this.createDate(`${dateToday}T${lunchEntry.endTime}`).diff(this.createDate(`${dateToday}T${lunchEntry.startTime}`), 'minutes') : 0;
 
     const currentProjectEntry = timeline[timeline.length - 1];
     const project = this.state.projects.find(p => p.id === currentProjectEntry.projectId);
@@ -210,55 +213,20 @@ export class StateRecorder {
 
   private save(): void {
     if (this.state) {
-      localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(this.state));
+      this.storage.setItem(LOCALSTORAGE_KEY, JSON.stringify(this.state));
     }
   }
 
   private load(): void {
-    const data = localStorage.getItem(LOCALSTORAGE_KEY);
+    const data = this.storage.getItem(LOCALSTORAGE_KEY);
     if (!data) {
       this.state = {
-        projects: [],
+        projects: [{name: 'Lunch', id: 1, color: 'red'}, {name: 'Break', id: 2, color: 'yellow'}],
         timelines: {}
       };
       return;
     }
 
     this.state = JSON.parse(data);
-  }
-
-  private ensureLunchEntry(currentTime: Dayjs): void {
-    if (!this.state || !this.currentProject) {
-      return;
-    }
-
-    const lunchTime = createDate().startOf('day').set('hours', 12);
-    const lunchProject = this.state?.projects.find(p => p.name === 'Lunch');
-    if (!lunchProject) {
-      console.error('Couldnt find lunch project');
-      return;
-    }
-    const timeline = this.state.timelines[currentTime.format('YYYY-MM-DD')];
-    const hasLunchEntry = timeline.some(e => e.projectId === lunchProject.id);
-    const shouldAddLunch = (currentTime.isAfter(lunchTime, 'minutes') || currentTime.isSame(lunchTime, 'minutes')); 
-    if (shouldAddLunch && !hasLunchEntry) {
-      const lunchStartTime = lunchTime.format('HH:mm')
-      this.currentProject.endTime = lunchStartTime;
-      timeline.push({
-        startTime: lunchStartTime,
-        endTime: lunchStartTime,
-        projectId: lunchProject.id
-      });
-
-      const newProject: TimelineEntry = {
-        startTime: lunchStartTime,
-        endTime: currentTime.format('HH:mm'),
-        projectId: this.currentProject.projectId
-      };
-      this.currentProject =  newProject;
-      timeline.push(newProject);
-    } else {
-      console.error('not time to add lunch entry', hasLunchEntry, shouldAddLunch);
-    }
   }
 }

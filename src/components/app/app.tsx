@@ -133,7 +133,7 @@ export default function App() {
             <LunchTime value={lunchTimeInMinutes} disabled={!currentProject} onChange={handleLunchTimeChanged} onLunchStarted={() => stateRecorder.addLunch()} />
           </div>
           <div className='section'>
-            <BillableProject value={currentProject} onChange={handleProjectChanged} />
+            <BillableProject existingProjects={stateRecorder.availableProjects()} value={currentProject} onChange={handleProjectChanged} />
           </div>
           <div className='section'>
             <div>Total Hours: {totalTimeInHours}</div>

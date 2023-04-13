@@ -254,6 +254,10 @@ export class StateRecorder {
     }
   }
 
+  public availableProjects(): {id: number, name: string}[] {
+    return this.state.projects.filter(p => p.name !== 'Lunch' && p.name !== 'Break');
+  }
+
   private save(): void {
     this.storage.setItem(LOCALSTORAGE_KEY, JSON.stringify(this.state));
   }

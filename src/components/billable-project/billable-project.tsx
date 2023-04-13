@@ -7,17 +7,13 @@ interface Project {
   name: string;
 }
 
-const existingProjects = [
-   {id: 1, name: 'Internal'},
-   {id: 2, name: 'Volvo'},
-];
-
 interface BillableProjectProps {
   value: Project | undefined;
+  existingProjects: {id: number, name: string}[];
   onChange: (project: Project) => void;
 }
 
-export default function BillableProject({value, onChange}: BillableProjectProps) {
+export default function BillableProject({value, onChange, existingProjects}: BillableProjectProps) {
   const [project, setProject] = useState<Project | undefined>(undefined)
   const [editingProject, setEditingProject] = useState(false);
 
@@ -47,7 +43,7 @@ export default function BillableProject({value, onChange}: BillableProjectProps)
         <button onClick={handleStartButtonClicked} className={styles['project__edit-btn']}>Edit</button>
       </div>
       { editingProject ? <>
-        <select value={project?.id} onChange={selected => handleEditProject(selected)}>{(project == undefined ? [<option key={0}>Please Select</option>] : []).concat(existingProjects.map(p => <option key={p.id} value={p.id}>{p.name}</option>))}</select>  
+        <select value={project?.id} style={{width: '50%'}} onChange={selected => handleEditProject(selected)}>{(project == undefined ? [<option key={0}>Please Select</option>] : []).concat(existingProjects.map(p => <option key={p.id} value={p.id}>{p.name}</option>))}</select>  
       </> : ''}
     </>
   );

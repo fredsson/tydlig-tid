@@ -1,6 +1,7 @@
 import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import {default as createDate, Dayjs} from 'dayjs';
 import './app.css'
+import githubLogo from '../../assets/github-mark.svg';
 import StartTime from '../start-time/start-time';
 import LunchTime from '../lunch-time/lunch-time';
 import BillableProject from '../billable-project/billable-project';
@@ -123,6 +124,7 @@ export default function App() {
         </label>
         <button className='state-btn' onClick={handleExport}>Export</button>
         <button className='state-btn' onClick={updateTodayState}>Refresh</button>
+        <a className='github-link' href="https://github.com/fredsson/tydlig-tid" target='_blank'><img className='github-link__icon' src={githubLogo} /></a>
       </div>
       <div className='main-layout'>
         { timelineToday ? <aside>

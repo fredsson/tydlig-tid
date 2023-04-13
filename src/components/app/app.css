@@ -76,3 +76,13 @@
 .state-import__input {
   display: none;
 }
+
+.github-link {
+  display: inline-block;
+  margin-left: 5rem;
+}
+
+.github-link__icon {
+  width: 2.5rem;
+  height: 2.5rem;
+}

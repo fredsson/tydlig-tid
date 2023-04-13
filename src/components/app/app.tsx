@@ -105,7 +105,7 @@ export default function App() {
           <StartTime onChange={handleStartDay} disabled={!currentProject} />
         </div>
         <div className='section'>
-          <LunchTime onChange={handleLunchTimeChanged} />
+          <LunchTime disabled={!currentProject} onChange={handleLunchTimeChanged} />
         </div>
         <div className='section'>
           <BillableProject onChange={handleProjectChanged} />

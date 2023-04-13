@@ -204,6 +204,56 @@ export class StateRecorder {
 
   }
 
+  public timelineForToday() {
+    const dateToday = this.createDate().format('YYYY-MM-DD');
+    const timeline = this.state.timelines[dateToday];
+    if (!timeline) {
+      return undefined;
+    }
+
+    const lunchProject = this.state?.projects.find(p => p.name === 'Lunch');
+    if (!lunchProject) {
+      return undefined;
+    }
+
+    const entries = timeline.map(e => {
+      const project = this.state.projects.find(p => p.id === e.projectId);
+      return {
+        startTime: this.createDate(`${dateToday}T${e.startTime}`),
+        endTime: this.createDate(`${dateToday}T${e.endTime}`),
+        id: e.projectId,
+        name: project?.name ?? '?',
+        color: project?.color ?? 'hotpink'
+      };
+    });
+
+    const legend = entries.reduce<Record<string,string>>((total, e) => {
+      total[e.name] = e.color;
+      return total;
+    }, {});
+
+    const lunchEntry = entries.find(e => e.id === lunchProject.id);
+    const entriesBeforeLunch = entries.filter(b => b.startTime.isBefore(lunchEntry?.startTime));
+    const entriesAfterLunch = entries.filter(b => b.startTime.isAfter(lunchEntry?.startTime));
+
+    const totalMinutesBeforeLunch = 4 * 60;
+    const totalMinutesAfterLunch = entriesAfterLunch.reduce((prev, cur) => prev + cur.endTime.diff(cur.startTime, 'minutes'), 0);
+
+    return {
+      legend,
+      timeline: {
+        beforeLunch: entriesBeforeLunch.map(e => ({
+          percentage: (e.endTime.diff(e.startTime, 'minutes') / totalMinutesBeforeLunch) * 100,
+          color: e.color
+        })),
+        afterLunch: entriesAfterLunch.map(e => ({
+          percentage: (e.endTime.diff(e.startTime, 'minutes') / totalMinutesAfterLunch) * 100,
+          color: e.color
+        }))
+      }
+    }
+  }
+
   private save(): void {
     this.storage.setItem(LOCALSTORAGE_KEY, JSON.stringify(this.state));
   }

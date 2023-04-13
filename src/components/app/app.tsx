@@ -42,7 +42,7 @@ const stateRecorder = new StateRecorder();
 
 export default function App() {
   const [startTime, setStartTime] = useState<Dayjs | undefined>(undefined);
-  const [lunchTimeInMinutes, setLunchTime] = useState<number | undefined>(10);
+  const [lunchTimeInMinutes, setLunchTime] = useState<number | undefined>(undefined);
   const [totalTimeInHours, setTotalTime] = useState<number | undefined>(undefined);
   const [currentProject, setProject] = useState<{name: string, id: number} | undefined>(undefined);
 
@@ -98,6 +98,16 @@ export default function App() {
       stateRecorder.importFromFile(content);
       importRef.current.value = "";
     });
+
+    const today = stateRecorder.today();
+    if (today) {
+      setProject(today.currentProject);
+      handleStartDay(today.startTime);
+      if (today.lunchTimeInMinutes) {
+        setLunchTime(today.lunchTimeInMinutes);
+      }
+
+    }
   }
 
   return (
@@ -128,13 +138,13 @@ export default function App() {
         <div>
           <h1>Tydlig Tid</h1>
           <div className='section'>
-            <StartTime onChange={handleStartDay} disabled={!currentProject} />
+            <StartTime value={startTime} onChange={handleStartDay} disabled={!currentProject} />
           </div>
           <div className='section'>
-            <LunchTime disabled={!currentProject} onChange={handleLunchTimeChanged} />
+            <LunchTime value={lunchTimeInMinutes} disabled={!currentProject} onChange={handleLunchTimeChanged}/>
           </div>
           <div className='section'>
-            <BillableProject onChange={handleProjectChanged} />
+            <BillableProject value={currentProject} onChange={handleProjectChanged} />
           </div>
           <div className='section'>
             <div>Total Hours: {totalTimeInHours}</div>

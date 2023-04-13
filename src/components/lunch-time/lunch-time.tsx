@@ -6,15 +6,21 @@ import styles from './lunch-time.module.css';
 let startOfLunch: Dayjs | undefined;
 
 interface LunchTimeProps {
+  value: number | undefined;
   onChange(e: number): void;
+  onLunchStarted?(): void;
   disabled: boolean;
 }
 
-export default function LunchTime({disabled, onChange}: LunchTimeProps) {
+export default function LunchTime({value, disabled, onChange, onLunchStarted}: LunchTimeProps) {
   const [lunchTimeInMinutes, setLunchTime] = useState<number | undefined>(undefined);
   const [eatingLunch, setEatingLunch] = useState<boolean>(false);
   const [editingLunchTime, setEditingLunchTime] = useState<boolean>(false);
   const editLunchRef = useRef(0);
+
+  useEffect(() => {
+    setLunchTime(value);
+  }, [value]);
 
   const updateLunchTime = () => {
     const diff = createDate().diff(startOfLunch, 'minutes');
@@ -45,6 +51,9 @@ export default function LunchTime({disabled, onChange}: LunchTimeProps) {
 
     if (!eatingLunch) {
       startOfLunch = createDate();
+      if (onLunchStarted) {
+        onLunchStarted();
+      }
     } else {
       const elapsedTime = updateLunchTime();
       onChange(elapsedTime);

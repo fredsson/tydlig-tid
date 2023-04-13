@@ -130,6 +130,39 @@ export class StateRecorder {
     this.save();
   }
 
+  public today(): TodayState | undefined {
+    if (!this.state) {
+      return undefined;
+    }
+  
+    const dateToday = createDate().format('YYYY-MM-DD');
+
+    const timeline = this.state?.timelines[dateToday];
+    if (!timeline) {
+      return undefined;
+    }
+
+
+
+    const startTime = createDate(`${dateToday}T${timeline[0].startTime}`);
+
+    const lunchProject = this.state?.projects.find(p => p.name === 'Lunch');
+    const lunchEntry = timeline.find(e => e.projectId === lunchProject?.id);
+
+
+    const lunchTimeInMinutes = lunchEntry ? createDate(`${dateToday}T${lunchEntry.endTime}`).diff(createDate(`${dateToday}T${lunchEntry.startTime}`), 'minutes') : 0;
+
+    const currentProjectEntry = timeline[timeline.length - 1];
+    const project = this.state.projects.find(p => p.id === currentProjectEntry.projectId);
+
+    return {
+      startTime,
+      lunchTimeInMinutes,
+      currentProject: project!,
+    };
+
+  }
+
   private save(): void {
     if (this.state) {
       localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(this.state));

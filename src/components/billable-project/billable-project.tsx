@@ -1,4 +1,4 @@
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 
 import styles from './billable-porject.module.css';
 
@@ -12,9 +12,18 @@ const existingProjects = [
    {id: 2, name: 'Volvo'},
 ];
 
-export default function BillableProject({onChange}: {onChange: (project: Project) => void}) {
+interface BillableProjectProps {
+  value: Project | undefined;
+  onChange: (project: Project) => void;
+}
+
+export default function BillableProject({value, onChange}: BillableProjectProps) {
   const [project, setProject] = useState<Project | undefined>(undefined)
   const [editingProject, setEditingProject] = useState(false);
+
+  useEffect(() => {
+    setProject(value);
+  }, [value]);
 
   const handleStartButtonClicked = () => {
     setEditingProject(true);

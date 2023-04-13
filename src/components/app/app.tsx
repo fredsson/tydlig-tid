@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import {default as createDate, Dayjs} from 'dayjs';
 import './app.css'
 import StartTime from '../start-time/start-time';
@@ -46,6 +46,8 @@ export default function App() {
   const [totalTimeInHours, setTotalTime] = useState<number | undefined>(undefined);
   const [currentProject, setProject] = useState<{name: string, id: number} | undefined>(undefined);
 
+  const importRef = useRef<any | undefined>(undefined);
+
   useEffect(() => {
     setTotalTime(calculateTotalHoursWorked(startTime, createDate(), lunchTimeInMinutes ?? 0));
     const timerId = setInterval(() => {
@@ -82,39 +84,64 @@ export default function App() {
     setProject(project);
   };
 
+  const handleExport = () => {
+    stateRecorder.exportToFile();
+  };
+
+  const handleImportStateFile = (ev: ChangeEvent<HTMLInputElement>) => {
+    const files = ev.target.files;
+    if (!files || files.length > 1) {
+      return;
+    }
+
+    files[0].text().then(content => {
+      stateRecorder.importFromFile(content);
+      importRef.current.value = "";
+    });
+  }
+
   return (
-    <div className='main-layout'>
-      <aside>
-        <div>Timeline</div>
-        <div className='timeline'>
-          <div className='timeline__legend'>
-            <div className='legend__item'><div style={{width: '5px', height: '5px', backgroundColor: colorsByProject['Lunch']}} />Lunch</div>
-            <div className='legend__item'><div style={{width: '5px', height: '5px', backgroundColor: colorsByProject['Internal']}} />Internal</div>
-            <div className='legend__item'><div style={{width: '5px', height: '5px', backgroundColor: colorsByProject['Volvo']}} />Volvo</div>
-          </div>
-          <div className='timeline__content'>
-            <div style={{height: '47%', display: 'flex', flexDirection: 'column', justifyContent: 'end'}}>{beforeLunch.map((b, i) => <div key={i} style={{height: `${(b.endTime.diff(b.startTime, 'minutes') / totalBeforeLunch) * 100}%`, backgroundColor: colorsByProject[b.project.name]}}></div>)}</div>
-            <div style={{height: '6%', backgroundColor: 'red'}}></div>
-            <div style={{height: '47%'}}>{afterLunch.map((b, i) => <div key={i} style={{height: `${(b.endTime.diff(b.startTime, 'minutes') / totalAfterLunch) * 100}%`, backgroundColor: colorsByProject[b.project.name]}}></div>)}</div>
-          </div>
-        </div>
-      </aside>
+    <>
       <div>
-        <h1>Tydlig Tid</h1>
-        <div className='section'>
-          <StartTime onChange={handleStartDay} disabled={!currentProject} />
-        </div>
-        <div className='section'>
-          <LunchTime disabled={!currentProject} onChange={handleLunchTimeChanged} />
-        </div>
-        <div className='section'>
-          <BillableProject onChange={handleProjectChanged} />
-        </div>
-        <div className='section'>
-          <div>Total Hours: {totalTimeInHours}</div>
-        </div>
+        <label className='state-import__label state-btn'>
+          Import
+          <input ref={importRef} className='state-import__input' type='file' accept='.json' title='Import' multiple={false} onChange={handleImportStateFile}/>
+        </label>
+        <button className='state-btn' onClick={handleExport}>Export</button>
       </div>
-      <aside>Test 2</aside>
-    </div>
+      <div className='main-layout'>
+        <aside>
+          <div>Timeline</div>
+          <div className='timeline'>
+            <div className='timeline__legend'>
+              <div className='legend__item'><div style={{width: '5px', height: '5px', backgroundColor: colorsByProject['Lunch']}} />Lunch</div>
+              <div className='legend__item'><div style={{width: '5px', height: '5px', backgroundColor: colorsByProject['Internal']}} />Internal</div>
+              <div className='legend__item'><div style={{width: '5px', height: '5px', backgroundColor: colorsByProject['Volvo']}} />Volvo</div>
+            </div>
+            <div className='timeline__content'>
+              <div style={{height: '47%', display: 'flex', flexDirection: 'column', justifyContent: 'end'}}>{beforeLunch.map((b, i) => <div key={i} style={{height: `${(b.endTime.diff(b.startTime, 'minutes') / totalBeforeLunch) * 100}%`, backgroundColor: colorsByProject[b.project.name]}}></div>)}</div>
+              <div style={{height: '6%', backgroundColor: 'red'}}></div>
+              <div style={{height: '47%'}}>{afterLunch.map((b, i) => <div key={i} style={{height: `${(b.endTime.diff(b.startTime, 'minutes') / totalAfterLunch) * 100}%`, backgroundColor: colorsByProject[b.project.name]}}></div>)}</div>
+            </div>
+          </div>
+        </aside>
+        <div>
+          <h1>Tydlig Tid</h1>
+          <div className='section'>
+            <StartTime onChange={handleStartDay} disabled={!currentProject} />
+          </div>
+          <div className='section'>
+            <LunchTime disabled={!currentProject} onChange={handleLunchTimeChanged} />
+          </div>
+          <div className='section'>
+            <BillableProject onChange={handleProjectChanged} />
+          </div>
+          <div className='section'>
+            <div>Total Hours: {totalTimeInHours}</div>
+          </div>
+        </div>
+        <aside>Test 2</aside>
+      </div>
+    </>
   )
 }

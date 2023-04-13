@@ -110,6 +110,26 @@ export class StateRecorder {
     this.save();
   }
 
+  public exportToFile(): void {
+    const link = document.createElement('a');
+    const content = JSON.stringify(this.state);
+
+    const file = new Blob([content], {type: 'application/json'});
+    link.href = URL.createObjectURL(file);
+
+    link.download = 'tydlig-tid-data.json';
+
+    link.click();
+
+    URL.revokeObjectURL(link.href);
+  }
+
+  public importFromFile(fileContent: string): void {
+    this.state = JSON.parse(fileContent);
+
+    this.save();
+  }
+
   private save(): void {
     if (this.state) {
       localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(this.state));

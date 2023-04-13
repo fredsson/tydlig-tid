@@ -20,6 +20,7 @@ const stateRecorder = new StateRecorder(localStorage, createDate);
 
 export default function App() {
   const [startTime, setStartTime] = useState<Dayjs | undefined>(undefined);
+  const [dayEnded, setDayEnded] = useState(false);
   const [lunchTimeInMinutes, setLunchTime] = useState<number | undefined>(undefined);
   const [totalTimeInHours, setTotalTime] = useState<number | undefined>(undefined);
   const [currentProject, setProject] = useState<{name: string, id: number} | undefined>(undefined);
@@ -27,7 +28,9 @@ export default function App() {
   const importRef = useRef<any | undefined>(undefined);
 
   useEffect(() => {
-    setTotalTime(calculateTotalHoursWorked(startTime, createDate(), lunchTimeInMinutes ?? 0));
+    if (dayEnded) {
+      return;
+    }
     const timerId = setInterval(() => {
       const currentTime = createDate();
       stateRecorder.updateCurrentProject(currentTime);
@@ -37,7 +40,7 @@ export default function App() {
     return () => {
       clearInterval(timerId);
     }
-  }, [startTime, lunchTimeInMinutes]);
+  }, [startTime, lunchTimeInMinutes, dayEnded]);
 
   const handleStartDay = (time: Dayjs) => {
     if (currentProject) {
@@ -48,11 +51,18 @@ export default function App() {
       }
     }
     setStartTime(time);
+    setTotalTime(calculateTotalHoursWorked(startTime, createDate(), lunchTimeInMinutes ?? 0));
+  };
+
+  const handleDayEnded = () => {
+    setTotalTime(calculateTotalHoursWorked(startTime, createDate(), lunchTimeInMinutes ?? 0)); 
+    setDayEnded(p => !p);
   };
 
   const handleLunchTimeChanged = (lunchTimeInMinutes: number) => {
     setLunchTime(lunchTimeInMinutes);
     stateRecorder.updateLunch(lunchTimeInMinutes);
+    setTotalTime(calculateTotalHoursWorked(startTime, createDate(), lunchTimeInMinutes ?? 0));
   };
 
   const handleProjectChanged = (project: {name: string, id: number}) => {
@@ -66,6 +76,24 @@ export default function App() {
     stateRecorder.exportToFile();
   };
 
+  
+  const updateTodayState = () => {
+    const today = stateRecorder.today();
+    if (today) {
+      setProject(today.currentProject);
+      handleStartDay(today.startTime);
+      if (today.lunchTimeInMinutes) {
+        setLunchTime(today.lunchTimeInMinutes);
+      }
+      setTotalTime(calculateTotalHoursWorked(today.startTime, createDate(), today.lunchTimeInMinutes ?? 0));
+    } else {
+      setProject(undefined);
+      setDayEnded(false);
+      setLunchTime(undefined);
+      setTotalTime(undefined);
+    }
+  };
+
   const handleImportStateFile = (ev: ChangeEvent<HTMLInputElement>) => {
     const files = ev.target.files;
     if (!files || files.length > 1) {
@@ -77,25 +105,11 @@ export default function App() {
       importRef.current.value = "";
     });
 
-    const today = stateRecorder.today();
-    if (today) {
-      setProject(today.currentProject);
-      handleStartDay(today.startTime);
-      if (today.lunchTimeInMinutes) {
-        setLunchTime(today.lunchTimeInMinutes);
-      }
-    }
+    updateTodayState();
   }
 
   useEffect(() => {
-    const today = stateRecorder.today();
-    if (today) {
-      setProject(today.currentProject);
-      handleStartDay(today.startTime);
-      if (today.lunchTimeInMinutes) {
-        setLunchTime(today.lunchTimeInMinutes);
-      }
-    }
+    updateTodayState();
   }, []);
 
   const timelineToday = stateRecorder.timelineForToday();
@@ -103,11 +117,12 @@ export default function App() {
   return (
     <>
       <div>
-        <label className='state-import__label state-btn'>
+        <label className='state-btn'>
           Import
           <input ref={importRef} className='state-import__input' type='file' accept='.json' title='Import' multiple={false} onChange={handleImportStateFile}/>
         </label>
         <button className='state-btn' onClick={handleExport}>Export</button>
+        <button className='state-btn' onClick={updateTodayState}>Refresh</button>
       </div>
       <div className='main-layout'>
         { timelineToday ? <aside>
@@ -137,6 +152,7 @@ export default function App() {
           </div>
           <div className='section'>
             <div>Total Hours: {totalTimeInHours}</div>
+            <button className='state-btn' onClick={handleDayEnded}>{dayEnded ? 'Continue' : 'End the Day'}</button>
           </div>
         </div>
         <aside>Test 2</aside>

@@ -69,8 +69,8 @@
   background-color: #a16730;
 }
 
-.state-import__label {
-  margin-right: 0.5rem;
+.state-btn + .state-btn {
+  margin-left: 0.5rem;
 }
 
 .state-import__input {

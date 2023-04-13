@@ -41,9 +41,13 @@ export class StateRecorder {
         timelines: {}
       };
       return;
+    } else {
+      this.state = JSON.parse(data);
     }
-
-    this.state = JSON.parse(data);
+    const timeline = this.state.timelines[this.createDate().format('YYYY-MM-DD')];
+    if (timeline && timeline.length) {
+      this.currentProject = timeline[timeline.length - 1];
+    }
   }
 
   public startDay(projectId: number, startTime: Dayjs) {
@@ -67,10 +71,6 @@ export class StateRecorder {
   }
 
   public updateCurrentProject(currentTime: Dayjs) {
-    if (!this.currentProject || !this.state) {
-      return;
-    }
-  
     if (this.currentProject) {
       this.currentProject.endTime = currentTime.format('HH:mm'); 
     }
@@ -167,7 +167,7 @@ export class StateRecorder {
   public importFromFile(fileContent: string): void {
     this.state = JSON.parse(fileContent);
 
-    const timeline = this.state?.timelines[this.createDate().format('YYYY-MM-DD')];
+    const timeline = this.state.timelines[this.createDate().format('YYYY-MM-DD')];
     if (timeline && timeline.length) {
       this.currentProject = timeline[timeline.length - 1];
     }

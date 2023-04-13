@@ -30,17 +30,23 @@ interface TodayState {
 
 export class StateRecorder {
 
-  private state: AppState | undefined = undefined;
+  private state: AppState;
   private currentProject: TimelineEntry | undefined  = undefined;
 
   constructor(private storage: RecorderStorage, private createDate: (date?: string) => Dayjs) {
-    this.load();
+    const data = this.storage.getItem(LOCALSTORAGE_KEY);
+    if (!data) {
+      this.state = {
+        projects: [{name: 'Lunch', id: 1, color: 'red'}, {name: 'Break', id: 2, color: 'yellow'}],
+        timelines: {}
+      };
+      return;
+    }
+
+    this.state = JSON.parse(data);
   }
 
   public startDay(projectId: number, startTime: Dayjs) {
-    if (!this.state) {
-      return;
-    }
     this.currentProject = {
       startTime: startTime.format('HH:mm'),
       endTime: startTime.format('HH:mm'),
@@ -54,9 +60,6 @@ export class StateRecorder {
   }
 
   public changeStartTime(startTime: Dayjs) {
-    if (!this.state) {
-      return;
-    }
     const timeline = this.state.timelines[startTime.format('YYYY-MM-DD')];
     timeline[0].startTime = startTime.format('HH:mm');
 
@@ -76,9 +79,6 @@ export class StateRecorder {
   }
 
   public changeProject(projectId: number, startTime: Dayjs) {
-    if (!this.state) {
-      return;
-    }
     if (this.currentProject) {
       this.currentProject.endTime = startTime.format('HH:mm');
     }
@@ -95,7 +95,7 @@ export class StateRecorder {
   }
 
   public addLunch(): void {
-    if (!this.state || !this.currentProject) {
+    if (!this.currentProject) {
       return;
     }
 
@@ -129,9 +129,6 @@ export class StateRecorder {
   }
 
   public updateLunch(timeInMinutes: number): void {
-    if (!this.state) {
-      return;
-    }
     const lunchProject = this.state.projects.find(p => p.name === 'Lunch');
     if (!lunchProject) {
       return;
@@ -179,10 +176,6 @@ export class StateRecorder {
   }
 
   public today(): TodayState | undefined {
-    if (!this.state) {
-      return undefined;
-    }
-  
     const dateToday = this.createDate().format('YYYY-MM-DD');
 
     const timeline = this.state?.timelines[dateToday];
@@ -212,21 +205,6 @@ export class StateRecorder {
   }
 
   private save(): void {
-    if (this.state) {
-      this.storage.setItem(LOCALSTORAGE_KEY, JSON.stringify(this.state));
-    }
-  }
-
-  private load(): void {
-    const data = this.storage.getItem(LOCALSTORAGE_KEY);
-    if (!data) {
-      this.state = {
-        projects: [{name: 'Lunch', id: 1, color: 'red'}, {name: 'Break', id: 2, color: 'yellow'}],
-        timelines: {}
-      };
-      return;
-    }
-
-    this.state = JSON.parse(data);
+    this.storage.setItem(LOCALSTORAGE_KEY, JSON.stringify(this.state));
   }
 }

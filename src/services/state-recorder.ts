@@ -17,6 +17,12 @@ interface AppState {
   timelines: Record<string, TimelineEntry[]>;
 }
 
+interface TodayState {
+  startTime: Dayjs;
+  lunchTimeInMinutes?: number;
+  currentProject: {name: string, id: number};
+}
+
 export class StateRecorder {
 
   private state: AppState | undefined = undefined;
@@ -85,6 +91,40 @@ export class StateRecorder {
     this.save();
   }
 
+  public addLunch(): void {
+    if (!this.state || !this.currentProject) {
+      return;
+    }
+
+    const lunchProject = this.state.projects.find(p => p.name === 'Lunch');
+    if (!lunchProject) {
+      return;
+    }
+    const timeline = this.state.timelines[createDate().format('YYYY-MM-DD')];
+    const hasLunchEntry = timeline.some(e => e.projectId === lunchProject.id);
+    if (hasLunchEntry) {
+      return;
+    }
+
+    const nextProject = {
+      ...this.currentProject
+    };
+
+    this.currentProject.endTime = '12:00';
+    timeline.push({
+      startTime: '12:00',
+      endTime: '12:00',
+      projectId: lunchProject.id,
+    });
+    nextProject.startTime = '12:00';
+    nextProject.endTime = '12:00';
+
+    timeline.push(nextProject);
+    this.currentProject = nextProject;
+
+    this.save();
+  }
+
   public updateLunch(timeInMinutes: number): void {
     if (!this.state) {
       return;
@@ -126,6 +166,11 @@ export class StateRecorder {
 
   public importFromFile(fileContent: string): void {
     this.state = JSON.parse(fileContent);
+
+    const timeline = this.state?.timelines[createDate().format('YYYY-MM-DD')];
+    if (timeline && timeline.length) {
+      this.currentProject = timeline[timeline.length - 1];
+    }
 
     this.save();
   }

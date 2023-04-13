@@ -141,7 +141,7 @@ export default function App() {
             <StartTime value={startTime} onChange={handleStartDay} disabled={!currentProject} />
           </div>
           <div className='section'>
-            <LunchTime value={lunchTimeInMinutes} disabled={!currentProject} onChange={handleLunchTimeChanged}/>
+            <LunchTime value={lunchTimeInMinutes} disabled={!currentProject} onChange={handleLunchTimeChanged} onLunchStarted={() => stateRecorder.addLunch()} />
           </div>
           <div className='section'>
             <BillableProject value={currentProject} onChange={handleProjectChanged} />

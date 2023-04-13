@@ -27,10 +27,7 @@ export default function LunchTime({disabled, onChange}: LunchTimeProps) {
   useEffect(() => {
     if (eatingLunch) {
       updateLunchTime();
-      console.log('hello?');
       const id = setInterval(() => {
-        console.log('hello 2?');
-
         updateLunchTime();
       }, 60 * 1000);
       return () => {

@@ -15,43 +15,6 @@
   margin-top: 2rem;
 }
 
-
-.timeline {
-  display: flex;
-  flex-direction: row;
-  column-gap: 0.3rem;
-
-  margin-top: 3rem;
-  height: 25rem;
-}
-
-.timeline__legend {
-  font-size: 0.7rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-}
-
-.legend__item {
-  display: flex;
-  flex-direction: row;
-  column-gap: 0.2rem;
-  align-items: center;
-}
-
-.timeline__content {
-  width: 3rem;
-  background-color: #ccc;
-  height: 100%;
-}
-
-.timeline__before-lunch {
-  height: 47%;
-  display:flex;
-  flex-direction: column;
-  justify-content: flex-end;
-}
-
 .state-btn {
   font-size: 1rem;
   font-weight: 500;

@@ -6,6 +6,7 @@ import StartTime from '../start-time/start-time';
 import LunchTime from '../lunch-time/lunch-time';
 import BillableProject from '../billable-project/billable-project';
 import { StateRecorder } from '../../services/state-recorder';
+import Timeline from '../timeline/timeline';
 
 function calculateTotalHoursWorked(startTime: Dayjs | undefined, now: Dayjs, lunchTimeInMinutes: number) {
   if (!startTime) {
@@ -127,20 +128,7 @@ export default function App() {
         <a className='github-link' href="https://github.com/fredsson/tydlig-tid" target='_blank'><img className='github-link__icon' src={githubLogo} /></a>
       </div>
       <div className='main-layout'>
-        { timelineToday ? <aside>
-          <div>Timeline</div>
-          <div className='timeline'>
-            <div className='timeline__legend'>
-              { Object.entries(timelineToday.legend).map(([name, color]) => <div key={name} className='legend__item'><div style={{width: '5px', height: '5px', backgroundColor: color}}></div>{name}</div>) }
-            </div>
-            <div className='timeline__content'>
-              <div className='timeline__before-lunch'>{timelineToday.timeline.beforeLunch.map((e, i) => <div key={i} style={{height: `${e.percentage}%`, backgroundColor: e.color}}></div>)}</div>
-              <div style={{height: '6%', backgroundColor: 'red'}}></div>
-              <div style={{height: '47%'}}>{ timelineToday.timeline.afterLunch.map((e, i) => <div key={i} style={{height: `${e.percentage}%`, backgroundColor: e.color}}></div>)}</div>
-            </div>
-          </div>
-        </aside>
-        : ''}
+        { timelineToday ? <Timeline value={timelineToday} /> : ''}
         <div>
           <h1>Tydlig Tid</h1>
           <div className='section'>

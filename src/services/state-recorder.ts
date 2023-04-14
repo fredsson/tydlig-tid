@@ -237,7 +237,7 @@ export class StateRecorder {
     const entriesAfterLunch = entries.filter(b => b.startTime.isAfter(lunchEntry?.startTime));
 
     const totalMinutesBeforeLunch = 4 * 60;
-    const totalMinutesAfterLunch = entriesAfterLunch.reduce((prev, cur) => prev + cur.endTime.diff(cur.startTime, 'minutes'), 0);
+    const totalMinutesAfterLunch = Math.max(entriesAfterLunch.reduce((prev, cur) => prev + cur.endTime.diff(cur.startTime, 'minutes'), 0), 4 * 60);
 
     return {
       legend,

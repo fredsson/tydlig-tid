@@ -18,22 +18,23 @@ function classFromTimeSinceBreak(minutesSinceBreak: number): string {
   return 'break-container--success';
 }
 
-let startTime: Dayjs | undefined;
+let endOfLastBreak: Dayjs | undefined;
 export default function TakeBreak({value, onClick}: TakeBreakProps) {
   const [minutesSinceBreak, setMinutesSinceBreak] = useState<number>(0);
 
   useEffect(() => {
     if (value) {
+      endOfLastBreak = createDate().subtract(value, 'minutes');
       setMinutesSinceBreak(value);
     }
   }, [value]);
 
   useEffect(() => {
-    startTime = createDate();
+    endOfLastBreak = createDate();
     setMinutesSinceBreak(0);
 
     const intervalId = setInterval(() => {
-      const minutesPassed = createDate().diff(startTime, 'minutes');
+      const minutesPassed = createDate().diff(endOfLastBreak, 'minutes');
       setMinutesSinceBreak(minutesPassed);
     }, 60 * 1000);
 

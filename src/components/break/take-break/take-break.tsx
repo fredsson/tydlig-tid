@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import styles from './take-break.module.css';
 
 interface TakeBreakProps {
+  value: number | undefined;
   onClick: () => void;
 }
 
@@ -18,8 +19,14 @@ function classFromTimeSinceBreak(minutesSinceBreak: number): string {
 }
 
 let startTime: Dayjs | undefined;
-export default function TakeBreak({onClick}: TakeBreakProps) {
+export default function TakeBreak({value, onClick}: TakeBreakProps) {
   const [minutesSinceBreak, setMinutesSinceBreak] = useState<number>(0);
+
+  useEffect(() => {
+    if (value) {
+      setMinutesSinceBreak(value);
+    }
+  }, [value]);
 
   useEffect(() => {
     startTime = createDate();

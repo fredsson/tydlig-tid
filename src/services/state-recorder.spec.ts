@@ -11,7 +11,7 @@ const SMALL_EXAMPLE_STATE = `{
     "2023-04-13": [
       {"startTime": "8:10", "endTime": "12:00", "projectId": 2},
       {"startTime": "12:00", "endTime": "13:00", "projectId": 1},
-      {"startTime": "13:00", "endTime": "17:00", "projectId": 1}
+      {"startTime": "13:00", "endTime": "17:00", "projectId": 2}
     ]
   }
 }`;
@@ -99,6 +99,28 @@ describe('StateRecorder', () => {
       const state = JSON.parse(content);
 
       expect(state.timelines['2023-04-14'][0].endTime).toEqual('15:00');
+    });
+  });
+
+  describe('today', () => {
+    it('should be empty when timeline is missing', () => {
+      mockStorage.getItem = vi.fn(() => null);
+      stateRecorder = new StateRecorder(mockStorage, mockCreateDate);
+
+      const today = stateRecorder.today();
+
+      expect(today).toBeUndefined();
+    });
+
+    it('should provide correct values from timeline', () => {
+      const today = stateRecorder.today();
+
+      expect(today).toEqual({
+        startTime: createDate('2023-04-13T8:10'),
+        lunchTimeInMinutes: 60,
+        currentProject: {name: 'Internal', id: 2, color: '#28a745'},
+        minutesSinceLastBreak: 180
+      });
     });
   });
 });

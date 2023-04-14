@@ -29,6 +29,7 @@ export default function App() {
   const [lunchTimeInMinutes, setLunchTime] = useState<number | undefined>(undefined);
   const [totalTimeInHours, setTotalTime] = useState<number | undefined>(undefined);
   const [currentProject, setProject] = useState<{name: string, id: number} | undefined>(undefined);
+  const [minutesSinceLastBreak, setMinutesSinceLastBreak] = useState<number | undefined>(undefined);
 
   const [onBreak, setOnBreak] = useState(false);
 
@@ -79,11 +80,21 @@ export default function App() {
     setProject(project);
   };
 
+  const handleTakeBreak = () => {
+    setOnBreak(true);
+    stateRecorder.addBreak(createDate());
+  };
+
+  const handleEndBreak = (durationInMinutes: number) => {
+    setOnBreak(false);
+    setMinutesSinceLastBreak(0);
+    stateRecorder.endBreak(durationInMinutes);
+  }
+
   const handleExport = () => {
     stateRecorder.exportToFile();
   };
 
-  
   const updateTodayState = () => {
     const today = stateRecorder.today();
     if (today) {
@@ -93,11 +104,13 @@ export default function App() {
         setLunchTime(today.lunchTimeInMinutes);
       }
       setTotalTime(calculateTotalHoursWorked(today.startTime, createDate(), today.lunchTimeInMinutes ?? 0));
+      setMinutesSinceLastBreak(today.minutesSinceLastBreak);
     } else {
       setProject(undefined);
       setDayEnded(false);
       setLunchTime(undefined);
       setTotalTime(undefined);
+      setMinutesSinceLastBreak(undefined);
     }
   };
 
@@ -151,7 +164,7 @@ export default function App() {
           </div>
         </div>
         <aside className="break-sidebar">
-          { !onBreak ? <TakeBreak onClick={() => setOnBreak(true)} />  : <OnBreak onClick={() => setOnBreak(false)} /> }
+          { !onBreak ? <TakeBreak value={minutesSinceLastBreak} onClick={handleTakeBreak} />  : <OnBreak onClick={handleEndBreak} /> }
         </aside>
       </div>
     </>

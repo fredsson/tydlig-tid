@@ -26,6 +26,7 @@ interface TodayState {
   startTime: Dayjs;
   lunchTimeInMinutes?: number;
   currentProject: {name: string, id: number};
+  minutesSinceLastBreak: number;
 }
 
 export class StateRecorder {
@@ -33,11 +34,13 @@ export class StateRecorder {
   private state: AppState;
   private currentProject: TimelineEntry | undefined  = undefined;
 
+  private projectBeforeBreak: TimelineEntry | undefined = undefined;
+
   constructor(private storage: RecorderStorage, private createDate: (date?: string) => Dayjs) {
     const data = this.storage.getItem(LOCALSTORAGE_KEY);
     if (!data) {
       this.state = {
-        projects: [{name: 'Lunch', id: 1, color: 'red'}, {name: 'Break', id: 2, color: 'yellow'}],
+        projects: [{name: 'Lunch', id: 1, color: 'red'}, {name: 'Break', id: 2, color: 'orange'}],
         timelines: {}
       };
       return;
@@ -150,6 +153,58 @@ export class StateRecorder {
     this.save();
   }
 
+  public addBreak(startTime: Dayjs) {
+    const today = this.createDate().format('YYYY-MM-DD');
+    const timeline = this.state.timelines[today];
+
+    const breakProject = this.state.projects.find(p => p.name === 'Break');
+    if (!breakProject || !timeline) {
+      return;
+    }
+
+    if (this.currentProject) {
+      this.currentProject.endTime = startTime.format('HH:mm');
+      this.projectBeforeBreak = {
+        ...this.currentProject,
+      };
+    }
+
+    const b: TimelineEntry = {
+      startTime: startTime.format('HH:mm'),
+      endTime: startTime.format('HH:mm'),
+      projectId: breakProject?.id,
+    };
+
+    timeline.push(b);
+    this.currentProject = b;
+
+    this.save();
+  }
+
+  public endBreak(durationInMinutes: number) {
+    if (!this.currentProject || !this.projectBeforeBreak) {
+      return;
+    }
+
+    const today = this.createDate().format('YYYY-MM-DD');
+    const timeline = this.state.timelines[today];
+
+    const startTime = this.createDate(`${today}T${this.currentProject.startTime}`);
+    const endTime = startTime.add(durationInMinutes, 'minutes');
+
+    this.currentProject.endTime = endTime.format('HH:mm');
+
+    this.currentProject = this.projectBeforeBreak!;
+    this.currentProject.startTime = endTime.format('HH:mm');
+    this.currentProject.endTime = endTime.format('HH:mm');
+
+    timeline.push(
+      this.currentProject
+    );
+
+    this.save();
+  }
+
   public exportToFile(): void {
     const link = document.createElement('a');
     const content = JSON.stringify(this.state);
@@ -178,16 +233,14 @@ export class StateRecorder {
   public today(): TodayState | undefined {
     const dateToday = this.createDate().format('YYYY-MM-DD');
 
-    const timeline = this.state?.timelines[dateToday];
+    const timeline = this.state.timelines[dateToday];
     if (!timeline) {
       return undefined;
     }
 
-
-
     const startTime = this.createDate(`${dateToday}T${timeline[0].startTime}`);
 
-    const lunchProject = this.state?.projects.find(p => p.name === 'Lunch');
+    const lunchProject = this.state.projects.find(p => p.name === 'Lunch');
     const lunchEntry = timeline.find(e => e.projectId === lunchProject?.id);
 
 
@@ -196,12 +249,21 @@ export class StateRecorder {
     const currentProjectEntry = timeline[timeline.length - 1];
     const project = this.state.projects.find(p => p.id === currentProjectEntry.projectId);
 
+    const breakProject = this.state.projects.find(p => p.name === 'Break');
+
+    let lastValidEntry: TimelineEntry | undefined = undefined; 
+    for (const entry of timeline) {
+      if (entry.projectId === lunchProject?.id || entry.projectId === breakProject?.id) {
+        lastValidEntry = entry;
+      }
+    }
+
     return {
       startTime,
       lunchTimeInMinutes,
       currentProject: project!,
+      minutesSinceLastBreak: lastValidEntry ? this.createDate().diff(this.createDate(`${dateToday}T${lastValidEntry?.endTime}`), 'minutes') : this.createDate().diff(startTime, 'minutes'),
     };
-
   }
 
   public timelineForToday() {

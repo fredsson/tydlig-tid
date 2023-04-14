@@ -30,7 +30,6 @@ export default function Timeline({value}: TimelineProps) {
 
   return (
     <aside>
-      <div>Timeline</div>
       <div className={styles.timeline}>
         <div className={styles['timeline__legend']}>
           { legendItems }

@@ -19,3 +19,31 @@
 .edit-btn:disabled {
   background-color: grey !important;
 }
+
+.state-btn {
+  font-size: 1rem;
+  font-weight: 500;
+  font-family: inherit;
+  color: #fff;
+  background-color: #db8f47;
+  border-radius: 8px;
+  border: 0;
+  line-height: 1rem;
+  padding: 0.6rem 0.6rem;
+  cursor: pointer;
+  transition: background-color 0.25s;
+}
+
+.state-btn:hover, .state-btn:active {
+  background-color: #a16730;
+}
+
+.state-btn + .state-btn {
+  margin-left: 0.5rem;
+}
+
+.state-btn__label {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}

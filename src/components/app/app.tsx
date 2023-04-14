@@ -1,12 +1,15 @@
 import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import {default as createDate, Dayjs} from 'dayjs';
-import './app.css'
+import './app.css';
+import '../../styles/btn.css';
 import githubLogo from '../../assets/github-mark.svg';
 import StartTime from '../start-time/start-time';
 import LunchTime from '../lunch-time/lunch-time';
 import BillableProject from '../billable-project/billable-project';
 import { StateRecorder } from '../../services/state-recorder';
 import Timeline from '../timeline/timeline';
+import TakeBreak from '../break/take-break/take-break';
+import OnBreak from '../break/on-break/on-break';
 
 function calculateTotalHoursWorked(startTime: Dayjs | undefined, now: Dayjs, lunchTimeInMinutes: number) {
   if (!startTime) {
@@ -26,6 +29,8 @@ export default function App() {
   const [lunchTimeInMinutes, setLunchTime] = useState<number | undefined>(undefined);
   const [totalTimeInHours, setTotalTime] = useState<number | undefined>(undefined);
   const [currentProject, setProject] = useState<{name: string, id: number} | undefined>(undefined);
+
+  const [onBreak, setOnBreak] = useState(false);
 
   const importRef = useRef<any | undefined>(undefined);
 
@@ -118,8 +123,8 @@ export default function App() {
 
   return (
     <>
-      <div>
-        <label className='state-btn'>
+      <div className='tools-container'>
+        <label className='state-btn state-btn__label'>
           Import
           <input ref={importRef} className='state-import__input' type='file' accept='.json' title='Import' multiple={false} onChange={handleImportStateFile}/>
         </label>
@@ -145,7 +150,9 @@ export default function App() {
             <button className='state-btn' onClick={handleDayEnded}>{dayEnded ? 'Continue' : 'End the Day'}</button>
           </div>
         </div>
-        <aside>Test 2</aside>
+        <aside className="break-sidebar">
+          { !onBreak ? <TakeBreak onClick={() => setOnBreak(true)} />  : <OnBreak onClick={() => setOnBreak(false)} /> }
+        </aside>
       </div>
     </>
   )

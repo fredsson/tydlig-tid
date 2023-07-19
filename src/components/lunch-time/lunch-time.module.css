@@ -1,7 +1,0 @@
-.lunch-time__row {
-  composes: row from "../../styles/containers";
-}
-
-.lunch-time__edit-btn {
-  composes: edit-btn from "../../styles/btn";
-}

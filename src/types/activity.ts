@@ -7,6 +7,7 @@ export interface Activity {
 }
 
 export interface PerformedActivity {
+  id: number;
   activity: Activity;
   startTime: Dayjs;
   endTime: Dayjs;

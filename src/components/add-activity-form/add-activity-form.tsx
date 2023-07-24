@@ -28,7 +28,6 @@ export default function AddActivityForm({activities, onActivityAdded}: AddActivi
   };
 
   const handleTimePickerOnChange = (onChange: (value: any) =>void, value: any, validationError: string | null) => {
-    console.log('value changed to ', value, 'error', validationError);
     if (validationError) {
       onChange(null);
       return;
@@ -39,69 +38,71 @@ export default function AddActivityForm({activities, onActivityAdded}: AddActivi
 
   return (
     <form onSubmit={handleSubmit(handleOnSubmit)}>
-      <Box sx={{mb: '1rem', display: 'flex', columnGap: '1rem'}}>
-        <Controller
-          name="startTime"
-          control={control}
-          render={({field: {onChange, value}}) => (
-            <TimePicker
-              value={value}
-              onChange={(value, context) => handleTimePickerOnChange(onChange, value, context.validationError)}
-              ampm={false}
-              label="Start"
-            />
-          )}
-          rules={{
-            required: true,
-          }}
-        />
-        <Controller
-          name="endTime"
-          control={control}
-          render={({field: {onChange, value}}) => (
-            <TimePicker
-              value={value}
-              onChange={(value, context) => handleTimePickerOnChange(onChange, value, context.validationError)}
-              ampm={false}
-              label="End"
-            />
-          )}
-          rules={{
-            required: true,
-          }}
-        />
-        <Box sx={{width: '20rem'}}>
+      <Box sx={{display: "flex", flexDirection: 'column', maxWidth: '54rem'}}>
+        <Box sx={{mb: '1rem', display: 'flex', columnGap: '1rem'}}>
           <Controller
-            name="activity"
+            name="startTime"
             control={control}
-            render={({field: { onChange, value }, fieldState}) => (
-              <>
-                <Autocomplete
-                  value={value}
-                  onChange={(_, value) => onChange(value)}
-                  options={activities}
-                  isOptionEqualToValue={(option, value) => option.id === value.id}
-                  getOptionLabel={(params) => params?.name ?? '' }
-                  renderInput={(params) => <TextField label="Activity" {...params} />}
-                />
-                {fieldState.error ? <FormHelperText error={true}>{fieldState.error.message}</FormHelperText> : ''}
-              </>
+            render={({field: {onChange, value}}) => (
+              <TimePicker
+                value={value}
+                onChange={(value, context) => handleTimePickerOnChange(onChange, value, context.validationError)}
+                ampm={false}
+                label="Start"
+              />
             )}
             rules={{
               required: true,
-              validate: (value) => {
-                const found = activities.some(a => a.id === value?.id);
-                if (!found) {
-                  return 'Could not find activity';
-                }
-  
-                return undefined;
-              }
             }}
           />
+          <Controller
+            name="endTime"
+            control={control}
+            render={({field: {onChange, value}}) => (
+              <TimePicker
+                value={value}
+                onChange={(value, context) => handleTimePickerOnChange(onChange, value, context.validationError)}
+                ampm={false}
+                label="End"
+              />
+            )}
+            rules={{
+              required: true,
+            }}
+          />
+          <Box sx={{width: '20rem'}}>
+            <Controller
+              name="activity"
+              control={control}
+              render={({field: { onChange, value }, fieldState}) => (
+                <>
+                  <Autocomplete
+                    value={value}
+                    onChange={(_, value) => onChange(value)}
+                    options={activities}
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                    getOptionLabel={(params) => params?.name ?? '' }
+                    renderInput={(params) => <TextField label="Activity" {...params} />}
+                  />
+                  {fieldState.error ? <FormHelperText error={true}>{fieldState.error.message}</FormHelperText> : ''}
+                </>
+              )}
+              rules={{
+                required: true,
+                validate: (value) => {
+                  const found = activities.some(a => a.id === value?.id);
+                  if (!found) {
+                    return 'Could not find activity';
+                  }
+    
+                  return undefined;
+                }
+              }}
+            />
+          </Box>
         </Box>
+        <Button sx={{alignSelf: 'end', maxWidth: '10rem'}} type="submit" variant="contained">Add Activity</Button>
       </Box>
-      <Button type="submit" variant="contained">Add Activity</Button>
     </form>
   );
 }

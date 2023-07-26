@@ -1,7 +1,7 @@
-import { Autocomplete, Box, Button, FormHelperText, TextField } from "@mui/material";
-import { useForm, SubmitHandler, Controller, } from "react-hook-form";
+import { Box, Button } from "@mui/material";
+import { useForm, SubmitHandler } from "react-hook-form";
 import { Activity, PerformedActivity } from "../../types/activity";
-import {Dayjs} from 'dayjs';
+import { Dayjs } from 'dayjs';
 import FormTimePicker from "../forms/form-time-picker";
 import FormAutocomplete from "../forms/form-autocomplete";
 
@@ -30,28 +30,24 @@ export default function AddActivityForm({activities, onActivityAdded}: AddActivi
 
   return (
     <form onSubmit={handleSubmit(handleOnSubmit)}>
-      <Box sx={{display: "flex", flexDirection: 'column', maxWidth: '54rem'}}>
-        <Box sx={{mb: '1rem', display: 'flex', columnGap: '1rem'}}>
-          <FormTimePicker
-            control={control}
-            name="startTime"
-            label="Start"
-          />
-          <FormTimePicker
-            control={control}
-            name="endTime"
-            label="End"
-          />
-          <Box sx={{width: '20rem'}}>
-            <FormAutocomplete
-              control={control}
-              name="activity"
-              label="Activity"
-              activities={activities}
-            />
-          </Box>
-        </Box>
-        <Button sx={{alignSelf: 'end', maxWidth: '10rem'}} type="submit" variant="contained">Add Activity</Button>
+      <Box sx={{display: "grid", gridTemplateColumns: '18rem 18rem 20rem', gridTemplateRows: '1fr 1fr', gap: '1rem', justifyContent: 'center'}}>
+        <FormTimePicker
+          control={control}
+          name="startTime"
+          label="Start"
+        />
+        <FormTimePicker
+          control={control}
+          name="endTime"
+          label="End"
+        />
+        <FormAutocomplete
+          control={control}
+          name="activity"
+          label="Activity"
+          activities={activities}
+        />
+        <Button sx={{ gridColumn: 3, justifySelf: 'end', alignSelf: 'center' }} type="submit" variant="contained">Add Activity</Button>
       </Box>
     </form>
   );

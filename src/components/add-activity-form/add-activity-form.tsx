@@ -1,8 +1,9 @@
 import { Autocomplete, Box, Button, FormHelperText, TextField } from "@mui/material";
-import { TimePicker } from "@mui/x-date-pickers";
-import { useForm, SubmitHandler, Controller } from "react-hook-form";
+import { useForm, SubmitHandler, Controller, } from "react-hook-form";
 import { Activity, PerformedActivity } from "../../types/activity";
 import {Dayjs} from 'dayjs';
+import FormTimePicker from "../forms/form-time-picker";
+import FormAutocomplete from "../forms/form-autocomplete";
 
 interface AddActivityFormData {
   startTime: Dayjs | null;
@@ -27,77 +28,26 @@ export default function AddActivityForm({activities, onActivityAdded}: AddActivi
     reset();
   };
 
-  const handleTimePickerOnChange = (onChange: (value: any) =>void, value: any, validationError: string | null) => {
-    if (validationError) {
-      onChange(null);
-      return;
-    }
-
-    onChange(value);
-  }
-
   return (
     <form onSubmit={handleSubmit(handleOnSubmit)}>
       <Box sx={{display: "flex", flexDirection: 'column', maxWidth: '54rem'}}>
         <Box sx={{mb: '1rem', display: 'flex', columnGap: '1rem'}}>
-          <Controller
+          <FormTimePicker
+            control={control}
             name="startTime"
-            control={control}
-            render={({field: {onChange, value}}) => (
-              <TimePicker
-                value={value}
-                onChange={(value, context) => handleTimePickerOnChange(onChange, value, context.validationError)}
-                ampm={false}
-                label="Start"
-              />
-            )}
-            rules={{
-              required: true,
-            }}
+            label="Start"
           />
-          <Controller
-            name="endTime"
+          <FormTimePicker
             control={control}
-            render={({field: {onChange, value}}) => (
-              <TimePicker
-                value={value}
-                onChange={(value, context) => handleTimePickerOnChange(onChange, value, context.validationError)}
-                ampm={false}
-                label="End"
-              />
-            )}
-            rules={{
-              required: true,
-            }}
+            name="endTime"
+            label="End"
           />
           <Box sx={{width: '20rem'}}>
-            <Controller
-              name="activity"
+            <FormAutocomplete
               control={control}
-              render={({field: { onChange, value }, fieldState}) => (
-                <>
-                  <Autocomplete
-                    value={value}
-                    onChange={(_, value) => onChange(value)}
-                    options={activities}
-                    isOptionEqualToValue={(option, value) => option.id === value.id}
-                    getOptionLabel={(params) => params?.name ?? '' }
-                    renderInput={(params) => <TextField label="Activity" {...params} />}
-                  />
-                  {fieldState.error ? <FormHelperText error={true}>{fieldState.error.message}</FormHelperText> : ''}
-                </>
-              )}
-              rules={{
-                required: true,
-                validate: (value) => {
-                  const found = activities.some(a => a.id === value?.id);
-                  if (!found) {
-                    return 'Could not find activity';
-                  }
-    
-                  return undefined;
-                }
-              }}
+              name="activity"
+              label="Activity"
+              activities={activities}
             />
           </Box>
         </Box>

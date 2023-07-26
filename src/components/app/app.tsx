@@ -7,12 +7,15 @@ import { useEffect, useState } from 'react';
 import { StateRecorder } from '../../services/state-recorder';
 import {default as createDate} from 'dayjs';
 import EditIcon from '@mui/icons-material/Edit';
+import EditActivityDialog from '../edit-activity-dialog/edit-activity-dialog';
 
 const stateRecorder = new StateRecorder(createDate);
 
 export default function App() {
   const [activities, setActivities] = useState<PerformedActivity[]>([]);
   const [workedHours, setWorkedHours] = useState(0);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editActivity, setEditActivity] = useState<PerformedActivity | null>(null);
 
   const handleActivityAdded = (entry: PerformedActivity) => {
     const performedActivity = {
@@ -28,12 +31,30 @@ export default function App() {
     setActivities(stateRecorder.getTimelineForToday());
   };
 
+  const handleEditClicked = (performedActivity: PerformedActivity) => {
+    setEditActivity(performedActivity);
+    setEditOpen(true);
+  }
+
+  const handleEditClosed = (editedActivity?: PerformedActivity) => {
+    if (editedActivity) {
+      const copy = activities.slice(0);
+      const indexToReplace = copy.findIndex(v => v.id === editedActivity.id);
+      copy.splice(indexToReplace, 1, editedActivity);
+
+      setActivities(copy);
+      stateRecorder.replaceRecordsForDay(copy);
+    }
+    setEditOpen(false);
+    setEditActivity(null);
+  }
+
   useEffect(() => {
     setActivities(stateRecorder.getTimelineForToday());
   }, []);
 
   useEffect(() => {
-    const workActivities = activities.filter(v => ![1,2].includes(v.activity.id));
+    const workActivities = activities.filter(v => v.activity.id !== 1);
     const workTimeInMinutes = workActivities
       .map(v => v.endTime.diff(v.startTime, 'minutes'))
       .reduce((acc, v) => acc + v, 0);
@@ -43,11 +64,13 @@ export default function App() {
     setWorkedHours(roundedHours);
   }, [activities]);
 
+  const availableActivities = stateRecorder.getAvailableActivities();
+
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <h1>Tydlig Tid</h1>
       <Box sx={{ my: 3, mx: 2 }}>
-        <AddActivityForm activities={stateRecorder.getAvailableActivities()} onActivityAdded={handleActivityAdded} />
+        <AddActivityForm activities={availableActivities} onActivityAdded={handleActivityAdded} />
       </Box>
       <Divider variant="middle" />
       <h2>Today ({workedHours}h)</h2>
@@ -56,12 +79,13 @@ export default function App() {
           {index === 0 ? <Divider /> : ''}
           <ListItem sx={{borderLeft: '1px solid rgba(0,0,0, 0.12)', borderRight: '1px solid rgba(0,0,0, 0.12)'}} key={a.id} dense={true}>
             <ListItemText primary={a.activity.name} secondary={`${a.startTime.format('HH:mm')}-${a.endTime.format('HH:mm')}`} />
-            <ListItemIcon sx={{justifyContent: 'end'}}><EditIcon /></ListItemIcon>
+            <ListItemIcon onClick={() => handleEditClicked(a)} sx={{justifyContent: 'end'}}><EditIcon /></ListItemIcon>
           </ListItem>
           <Divider />
         </div>)) }
       </List>
       <Button variant="contained" onClick={handleNewDay}>New Day</Button>
+      {editActivity && <EditActivityDialog open={editOpen} activities={availableActivities} onClose={handleEditClosed} performedActivity={editActivity} ></EditActivityDialog>}
     </LocalizationProvider>
   )
 }

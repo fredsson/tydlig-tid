@@ -40,6 +40,17 @@ export class StateRecorder {
     this.saveStateToLocalStorage();
   }
 
+  public replaceRecordsForDay(activities: PerformedActivity[]) {
+    const todayDateString = this.dateFactory().format('YYYY-MM-DD');
+    if (!this.state.timelines[todayDateString]) {
+      return;
+    }
+
+    this.state.timelines[todayDateString] = activities;
+
+    this.saveStateToLocalStorage();
+  }
+
   public getAvailableActivities(): Activity[] {
     return this.state.activities;
   }
@@ -108,7 +119,6 @@ export class StateRecorder {
       ],
       timelines
     };
-    console.log(JSON.stringify(preparedState));
     window.localStorage.setItem(StateRecorder.StateKey, JSON.stringify(preparedState));
   }
 }

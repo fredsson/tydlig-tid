@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { StateRecorder } from '../../services/state-recorder';
 import {default as createDate} from 'dayjs';
 import EditIcon from '@mui/icons-material/Edit';
-import EditActivityDialog from '../edit-activity-dialog/edit-activity-dialog';
+import EditActivityDialog, { CloseAction } from '../edit-activity-dialog/edit-activity-dialog';
 
 const stateRecorder = new StateRecorder(createDate);
 
@@ -36,11 +36,19 @@ export default function App() {
     setEditOpen(true);
   }
 
-  const handleEditClosed = (editedActivity?: PerformedActivity) => {
-    if (editedActivity) {
+  const handleEditClosed = (action?: CloseAction) => {
+    if (action && action.editedActivity) {
+      const activity = action.editedActivity;
       const copy = activities.slice(0);
-      const indexToReplace = copy.findIndex(v => v.id === editedActivity.id);
-      copy.splice(indexToReplace, 1, editedActivity);
+      const indexToReplace = copy.findIndex(v => v.id === activity.id);
+      copy.splice(indexToReplace, 1, activity);
+
+      setActivities(copy);
+      stateRecorder.replaceRecordsForDay(copy);
+    } else if (action && action.deletedId) {
+      const copy = activities.slice(0);
+      const indexToRemove = copy.findIndex(v => v.id === action.deletedId);
+      copy.splice(indexToRemove, 1);
 
       setActivities(copy);
       stateRecorder.replaceRecordsForDay(copy);

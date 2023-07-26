@@ -8,11 +8,16 @@ import FormTimePicker from '../forms/form-time-picker';
 import { Box, Button } from '@mui/material';
 import FormAutocomplete from '../forms/form-autocomplete';
 
+export interface CloseAction {
+  editedActivity?: PerformedActivity;
+  deletedId?: number;
+}
+
 export interface EditActivityDialogProps {
   open: boolean;
   activities: Activity[];
   performedActivity: PerformedActivity;
-  onClose: (performedActivity?: PerformedActivity) => void;
+  onClose: (action?: CloseAction) => void;
 }
 
 interface EditActivityForm {
@@ -32,16 +37,27 @@ const EditActivityDialog = ({open, activities, performedActivity, onClose}: Edit
 
   const onHandleSubmit = (data: EditActivityForm) => {
     onClose({
-      ...performedActivity,
-      startTime: data.startTime,
-      endTime: data.endTime,
-      activity: data.activity
+      editedActivity: {
+        ...performedActivity,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        activity: data.activity
+      }
     });
   };
 
+  const onHandleDelete = () => {
+    onClose({
+      deletedId: performedActivity.id
+    })
+  }
+
   return (
     <Dialog open={open} onClose={() => onClose()}>
-      <DialogTitle>Edit Activity - {performedActivity.id}</DialogTitle>
+      <DialogTitle sx={{display: 'flex', justifyContent: 'space-between'}}>
+        Edit Activity - {performedActivity.id}
+        <Button sx={{alignSelf: 'end'}} type="button" variant="contained" color="error" onClick={onHandleDelete}>Delete</Button>
+      </DialogTitle>
       <Box sx={{padding: '1rem'}}>
         <form onSubmit={handleSubmit(onHandleSubmit)}>
           <Box sx={{display: 'flex', flexDirection: 'column', rowGap: '1rem'}}>
@@ -63,7 +79,7 @@ const EditActivityDialog = ({open, activities, performedActivity, onClose}: Edit
               label="Activity"
               activities={activities}
             />
-            <Button sx={{alignSelf: 'end', maxWidth: '10rem'}} type="submit" variant="contained">Save</Button>
+            <Button sx={{alignSelf: 'end'}} type="submit" variant="contained">Save</Button>
           </Box>
         </form>
       </Box>

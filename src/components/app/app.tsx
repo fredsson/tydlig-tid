@@ -81,7 +81,10 @@ export default function App() {
         <AddActivityForm activities={availableActivities} onActivityAdded={handleActivityAdded} />
       </Box>
       <Divider variant="middle" />
-      <h2>Today ({workedHours}h)</h2>
+      <h2>
+        Today ({workedHours}h)
+        <Button sx={{marginLeft: '2rem'}} variant="contained" onClick={handleNewDay}>New Day</Button>
+      </h2>
       <List sx={{maxWidth: '30rem'}}>
         { activities.map((a, index) => (<div key={a.id}>
           {index === 0 ? <Divider /> : ''}
@@ -92,7 +95,7 @@ export default function App() {
           <Divider />
         </div>)) }
       </List>
-      <Button variant="contained" onClick={handleNewDay}>New Day</Button>
+      
       {editActivity && <EditActivityDialog open={editOpen} activities={availableActivities} onClose={handleEditClosed} performedActivity={editActivity} ></EditActivityDialog>}
     </LocalizationProvider>
   )

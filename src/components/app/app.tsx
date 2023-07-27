@@ -1,172 +1,137 @@
-import { ChangeEvent, useEffect, useRef, useState } from 'react';
-import {default as createDate, Dayjs} from 'dayjs';
-import './app.css';
-import '../../styles/btn.css';
-import githubLogo from '../../assets/github-mark.svg';
-import StartTime from '../start-time/start-time';
-import LunchTime from '../lunch-time/lunch-time';
-import BillableProject from '../billable-project/billable-project';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import AddActivityForm from "../add-activity-form/add-activity-form";
+import { Box, Button, Divider, IconButton, List, ListItem, ListItemIcon, ListItemText, Tooltip, Typography, Link } from '@mui/material';
+import { PerformedActivity } from '../../types/activity';
+import { useEffect, useRef, useState, ChangeEvent } from 'react';
 import { StateRecorder } from '../../services/state-recorder';
-import Timeline from '../timeline/timeline';
-import TakeBreak from '../break/take-break/take-break';
-import OnBreak from '../break/on-break/on-break';
+import { default as createDate } from 'dayjs';
+import EditIcon from '@mui/icons-material/Edit';
+import EditActivityDialog, { CloseAction } from '../edit-activity-dialog/edit-activity-dialog';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+import GitHubIcon from '@mui/icons-material/GitHub';
 
-function calculateTotalHoursWorked(startTime: Dayjs | undefined, now: Dayjs, lunchTimeInMinutes: number) {
-  if (!startTime) {
-    return 0;
-  }
-  const totalMinutes = now.diff(startTime, 'minutes');
-  const totalHoursWithLunch = (totalMinutes - lunchTimeInMinutes) / 60;
-
-  return Math.round(totalHoursWithLunch * 10) / 10;
-}
-
-const stateRecorder = new StateRecorder(localStorage, createDate);
+const stateRecorder = new StateRecorder(createDate);
 
 export default function App() {
-  const [startTime, setStartTime] = useState<Dayjs | undefined>(undefined);
-  const [dayEnded, setDayEnded] = useState(false);
-  const [lunchTimeInMinutes, setLunchTime] = useState<number | undefined>(undefined);
-  const [totalTimeInHours, setTotalTime] = useState<number | undefined>(undefined);
-  const [currentProject, setProject] = useState<{name: string, id: number} | undefined>(undefined);
-  const [minutesSinceLastBreak, setMinutesSinceLastBreak] = useState<number | undefined>(undefined);
+  const [activities, setActivities] = useState<PerformedActivity[]>([]);
+  const [workedHours, setWorkedHours] = useState(0);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editActivity, setEditActivity] = useState<PerformedActivity | null>(null);
+  const uploadStateInputRef = useRef<HTMLInputElement>(null);
 
-  const [onBreak, setOnBreak] = useState(false);
-
-  const importRef = useRef<any | undefined>(undefined);
-
-  useEffect(() => {
-    if (dayEnded) {
-      return;
+  const handleActivityAdded = (entry: PerformedActivity) => {
+    const performedActivity = {
+      ...entry,
+      id: activities.length + 1
     }
-    const timerId = setInterval(() => {
-      const currentTime = createDate();
-      stateRecorder.updateCurrentProject(currentTime);
-      setTotalTime(calculateTotalHoursWorked(startTime, currentTime, lunchTimeInMinutes ?? 0)); 
-    }, 60 * 1000);
 
-    return () => {
-      clearInterval(timerId);
-    }
-  }, [startTime, lunchTimeInMinutes, dayEnded]);
-
-  const handleStartDay = (time: Dayjs) => {
-    if (currentProject) {
-      if (!startTime) {
-        stateRecorder.startDay(currentProject.id, time);
-      } else {
-        stateRecorder.changeStartTime(time);
-      }
-    }
-    setStartTime(time);
-    setTotalTime(calculateTotalHoursWorked(startTime, createDate(), lunchTimeInMinutes ?? 0));
+    setActivities(v => [...v, performedActivity])
+    stateRecorder.record(performedActivity);
   };
 
-  const handleDayEnded = () => {
-    setTotalTime(calculateTotalHoursWorked(startTime, createDate(), lunchTimeInMinutes ?? 0)); 
-    setDayEnded(p => !p);
+  const handleNewDay = () => {
+    setActivities(stateRecorder.getTimelineForToday());
   };
 
-  const handleLunchTimeChanged = (lunchTimeInMinutes: number) => {
-    setLunchTime(lunchTimeInMinutes);
-    stateRecorder.updateLunch(lunchTimeInMinutes);
-    setTotalTime(calculateTotalHoursWorked(startTime, createDate(), lunchTimeInMinutes ?? 0));
-  };
-
-  const handleProjectChanged = (project: {name: string, id: number}) => {
-    if (startTime) {
-      stateRecorder.changeProject(project.id, createDate());
-    }
-    setProject(project);
-  };
-
-  const handleTakeBreak = () => {
-    setOnBreak(true);
-    stateRecorder.addBreak(createDate());
-  };
-
-  const handleEndBreak = (durationInMinutes: number) => {
-    setOnBreak(false);
-    setMinutesSinceLastBreak(0);
-    stateRecorder.endBreak(durationInMinutes);
+  const handleEditClicked = (performedActivity: PerformedActivity) => {
+    setEditActivity(performedActivity);
+    setEditOpen(true);
   }
 
-  const handleExport = () => {
-    stateRecorder.exportToFile();
-  };
+  const handleEditClosed = (action?: CloseAction) => {
+    if (action && action.editedActivity) {
+      const activity = action.editedActivity;
+      const copy = activities.slice(0);
+      const indexToReplace = copy.findIndex(v => v.id === activity.id);
+      copy.splice(indexToReplace, 1, activity);
 
-  const updateTodayState = () => {
-    const today = stateRecorder.today();
-    if (today) {
-      setProject(today.currentProject);
-      handleStartDay(today.startTime);
-      if (today.lunchTimeInMinutes) {
-        setLunchTime(today.lunchTimeInMinutes);
-      }
-      setTotalTime(calculateTotalHoursWorked(today.startTime, createDate(), today.lunchTimeInMinutes ?? 0));
-      setMinutesSinceLastBreak(today.minutesSinceLastBreak);
-    } else {
-      setProject(undefined);
-      setDayEnded(false);
-      setLunchTime(undefined);
-      setTotalTime(undefined);
-      setMinutesSinceLastBreak(undefined);
+      setActivities(copy);
+      stateRecorder.replaceRecordsForDay(copy);
+    } else if (action && action.deletedId) {
+      const copy = activities.slice(0);
+      const indexToRemove = copy.findIndex(v => v.id === action.deletedId);
+      copy.splice(indexToRemove, 1);
+
+      setActivities(copy);
+      stateRecorder.replaceRecordsForDay(copy);
     }
-  };
+    setEditOpen(false);
+    setEditActivity(null);
+  }
 
-  const handleImportStateFile = (ev: ChangeEvent<HTMLInputElement>) => {
+  const handleUploadStateClicked = (ev: ChangeEvent<HTMLInputElement>) => {
     const files = ev.target.files;
-    if (!files || files.length > 1) {
+    if (!files || files.length !== 1) {
       return;
     }
 
     files[0].text().then(content => {
       stateRecorder.importFromFile(content);
-      importRef.current.value = "";
+      setActivities(stateRecorder.getTimelineForToday());
     });
+  }
 
-    updateTodayState();
+  const handleDownloadStateClicked = () => {
+    stateRecorder.exportToFile();
   }
 
   useEffect(() => {
-    updateTodayState();
+    setActivities(stateRecorder.getTimelineForToday());
   }, []);
 
-  const timelineToday = stateRecorder.timelineForToday();
+  useEffect(() => {
+    const workActivities = activities.filter(v => v.activity.id !== 1);
+    const workTimeInMinutes = workActivities
+      .map(v => v.endTime.diff(v.startTime, 'minutes'))
+      .reduce((acc, v) => acc + v, 0);
+
+    const roundedHours = Math.round((workTimeInMinutes / 60) * 100) / 100;
+
+    setWorkedHours(roundedHours);
+  }, [activities]);
+
+  const availableActivities = stateRecorder.getAvailableActivities();
 
   return (
-    <>
-      <div className='tools-container'>
-        <label className='state-btn state-btn__label'>
-          Import
-          <input ref={importRef} className='state-import__input' type='file' accept='.json' title='Import' multiple={false} onChange={handleImportStateFile}/>
-        </label>
-        <button className='state-btn' onClick={handleExport}>Export</button>
-        <button className='state-btn' onClick={updateTodayState}>Refresh</button>
-        <a className='github-link' href="https://github.com/fredsson/tydlig-tid" target='_blank'><img className='github-link__icon' src={githubLogo} /></a>
-      </div>
-      <div className='main-layout'>
-        { timelineToday ? <Timeline value={timelineToday} /> : ''}
-        <div>
-          <h1>Tydlig Tid</h1>
-          <div className='section'>
-            <StartTime value={startTime} onChange={handleStartDay} disabled={!currentProject} />
-          </div>
-          <div className='section'>
-            <LunchTime value={lunchTimeInMinutes} disabled={!currentProject} onChange={handleLunchTimeChanged} onLunchStarted={() => stateRecorder.addLunch()} />
-          </div>
-          <div className='section'>
-            <BillableProject existingProjects={stateRecorder.availableProjects()} value={currentProject} onChange={handleProjectChanged} />
-          </div>
-          <div className='section'>
-            <div>Total Hours: {totalTimeInHours}</div>
-            <button className='state-btn' onClick={handleDayEnded}>{dayEnded ? 'Continue' : 'End the Day'}</button>
-          </div>
-        </div>
-        <aside className="break-sidebar">
-          { !onBreak ? <TakeBreak value={minutesSinceLastBreak} onClick={handleTakeBreak} />  : <OnBreak onClick={handleEndBreak} /> }
-        </aside>
-      </div>
-    </>
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <Box sx={{ display: 'flex', justifyContent: 'end', marginRight: '20rem' }}>
+        <Tooltip title="Upload State">
+          <IconButton color='warning' onClick={() => uploadStateInputRef.current?.click()} >
+            <CloudUploadIcon></CloudUploadIcon>
+            <Box sx={{display: 'none'}}><input ref={uploadStateInputRef} type="file" accept='.json' multiple={false} onChange={handleUploadStateClicked} /></Box>
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Download State">
+          <IconButton color='primary' onClick={handleDownloadStateClicked} >
+            <CloudDownloadIcon></CloudDownloadIcon>
+          </IconButton>
+        </Tooltip>
+        <Link href="https://github.com/fredsson/tydlig-tid" target="_blank" ><IconButton><GitHubIcon/></IconButton></Link>
+      </Box>
+      <Typography sx={{textAlign: 'center'}} variant="h2">Tydlig Tid</Typography>
+      <Box sx={{ my: 3, mx: 2}}>
+        <AddActivityForm activities={availableActivities} onActivityAdded={handleActivityAdded} />
+      </Box>
+      <Divider variant="middle" />
+      <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '1rem'}}>
+        <Typography sx={{minWidth: '30rem'}} variant="h4" >
+          Today ({workedHours}h)
+          <Button sx={{marginLeft: '2rem'}} variant="contained" onClick={handleNewDay}>New Day</Button>
+        </Typography>
+        <List sx={{minWidth: '30rem'}}>
+          { activities.map((a, index) => (<div key={a.id}>
+            {index === 0 ? <Divider /> : ''}
+            <ListItem sx={{borderLeft: '1px solid rgba(0,0,0, 0.12)', borderRight: '1px solid rgba(0,0,0, 0.12)'}} key={a.id} dense={true}>
+              <ListItemText primary={a.activity.name} secondary={`${a.startTime.format('HH:mm')}-${a.endTime.format('HH:mm')}`} />
+              <ListItemIcon onClick={() => handleEditClicked(a)} sx={{justifyContent: 'end'}}><EditIcon /></ListItemIcon>
+            </ListItem>
+            <Divider />
+          </div>)) }
+        </List>
+      </Box>
+      {editActivity && <EditActivityDialog open={editOpen} activities={availableActivities} onClose={handleEditClosed} performedActivity={editActivity} ></EditActivityDialog>}
+    </LocalizationProvider>
   )
 }

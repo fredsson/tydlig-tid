@@ -1,17 +1,11 @@
 import { Activity, PerformedActivity } from "../types/activity";
 import {Dayjs} from 'dayjs';
+import { TydligState } from "../types/state";
+import { StateImporter } from "./state-importer";
 
-interface TydligState {
-  activities: Activity[];
-  timelines: Record<string, PerformedActivity[]>;
-}
 
-interface StoredPerformedActivity {
-  id: number;
-  activityId: number;
-  startTime: string;
-  endTime: string;
-}
+
+
 
 export class StateRecorder {
   private static StateKey = 'TYDLIG_TID_STATE';
@@ -25,7 +19,10 @@ export class StateRecorder {
     timelines: {}
   };
 
+  private stateImporter: StateImporter;
+
   constructor(private dateFactory: (dateTime?: string) => Dayjs) {
+    this.stateImporter = new StateImporter(dateFactory);
     this.loadStateFromLocalStorage();
   }
 
@@ -65,42 +62,67 @@ export class StateRecorder {
     return timeline;
   }
 
+  public importFromFile(fileContent: string): void {
+    const importedState = this.stateImporter.import(fileContent);
+
+    this.state.activities = Array.from(this.state.activities.concat(importedState.activities).reduce((acc, value) => {
+      acc.set(value.id, value);
+
+      return acc;
+    }, new Map<number, Activity>()).values());
+
+    Object.entries(importedState.timelines).forEach(([key, timeline]) => {
+      if (!this.state.timelines[key]) {
+        this.state.timelines[key] = timeline;
+      }
+    });
+
+    this.saveStateToLocalStorage();
+  }
+
+  public exportToFile(): void {
+    const link = document.createElement('a');
+    
+    const preparedState = {
+      activities: [
+        ...this.state.activities
+      ],
+      timelines: this.transformTimelineForStorage(this.state.timelines)
+    };
+
+    const file = new Blob([JSON.stringify(preparedState)], {type: 'application/json'});
+    link.href = URL.createObjectURL(file);
+
+    link.download = 'tydlig-tid-state.json';
+
+    link.click();
+
+    URL.revokeObjectURL(link.href);
+  }
+
   private loadStateFromLocalStorage() {
     const storedState = window.localStorage.getItem(StateRecorder.StateKey);
     if (!storedState) {
       return;
     }
 
-    const state = JSON.parse(storedState);
-
-    const timelines = Object.entries<StoredPerformedActivity[]>(state.timelines).reduce<Record<string, PerformedActivity[]>>((acc, [key, value]) => {
-      const transformedTimeline: PerformedActivity[] = value.map(v => {
-        const activity: Activity | undefined = state.activities.find((activity: Activity) => activity.id === v.activityId);
-        if (!activity) {
-          throw new Error(`Could not find activity for id ${v.activityId} in state!`);
-        }
-        return {
-          id: v.id,
-          activity,
-          startTime: this.dateFactory(`${key}T${v.startTime}`),
-          endTime: this.dateFactory(`${key}T${v.endTime}`),
-        };
-      }); 
-
-      acc[key] = transformedTimeline;
-
-      return acc;
-    }, {})
-
-
-    this.state = {
-      activities: state.activities,
-      timelines
-    };
+    this.state = this.stateImporter.import(storedState);
   }
 
   private saveStateToLocalStorage() {
-    const timelines = Object.entries(this.state.timelines).reduce<any>((acc, [key, value]) => {
+    const timelines = this.transformTimelineForStorage(this.state.timelines);
+    
+    const preparedState = {
+      activities: [
+        ...this.state.activities
+      ],
+      timelines
+    };
+    window.localStorage.setItem(StateRecorder.StateKey, JSON.stringify(preparedState));
+  }
+
+  private transformTimelineForStorage(timelines: Record<string, PerformedActivity[]>) {
+    return Object.entries(timelines).reduce<any>((acc, [key, value]) => {
       const transformedTimelines = value.map(v => ({
         id: v.id,
         activityId: v.activity.id,
@@ -112,13 +134,5 @@ export class StateRecorder {
 
       return acc;
     }, {});
-    
-    const preparedState = {
-      activities: [
-        ...this.state.activities
-      ],
-      timelines
-    };
-    window.localStorage.setItem(StateRecorder.StateKey, JSON.stringify(preparedState));
   }
 }

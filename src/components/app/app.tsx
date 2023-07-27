@@ -1,13 +1,16 @@
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import AddActivityForm from "../add-activity-form/add-activity-form";
-import { Box, Button, Divider, List, ListItem, ListItemIcon, ListItemText, Typography } from '@mui/material';
+import { Box, Button, Divider, IconButton, List, ListItem, ListItemIcon, ListItemText, Tooltip, Typography, Link } from '@mui/material';
 import { PerformedActivity } from '../../types/activity';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, ChangeEvent } from 'react';
 import { StateRecorder } from '../../services/state-recorder';
 import { default as createDate } from 'dayjs';
 import EditIcon from '@mui/icons-material/Edit';
 import EditActivityDialog, { CloseAction } from '../edit-activity-dialog/edit-activity-dialog';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+import GitHubIcon from '@mui/icons-material/GitHub';
 
 const stateRecorder = new StateRecorder(createDate);
 
@@ -16,6 +19,7 @@ export default function App() {
   const [workedHours, setWorkedHours] = useState(0);
   const [editOpen, setEditOpen] = useState(false);
   const [editActivity, setEditActivity] = useState<PerformedActivity | null>(null);
+  const uploadStateInputRef = useRef<HTMLInputElement>(null);
 
   const handleActivityAdded = (entry: PerformedActivity) => {
     const performedActivity = {
@@ -57,6 +61,22 @@ export default function App() {
     setEditActivity(null);
   }
 
+  const handleUploadStateClicked = (ev: ChangeEvent<HTMLInputElement>) => {
+    const files = ev.target.files;
+    if (!files || files.length !== 1) {
+      return;
+    }
+
+    files[0].text().then(content => {
+      stateRecorder.importFromFile(content);
+      setActivities(stateRecorder.getTimelineForToday());
+    });
+  }
+
+  const handleDownloadStateClicked = () => {
+    stateRecorder.exportToFile();
+  }
+
   useEffect(() => {
     setActivities(stateRecorder.getTimelineForToday());
   }, []);
@@ -76,6 +96,20 @@ export default function App() {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <Box sx={{ display: 'flex', justifyContent: 'end', marginRight: '20rem' }}>
+        <Tooltip title="Upload State">
+          <IconButton color='warning' onClick={() => uploadStateInputRef.current?.click()} >
+            <CloudUploadIcon></CloudUploadIcon>
+            <Box sx={{display: 'none'}}><input ref={uploadStateInputRef} type="file" accept='.json' multiple={false} onChange={handleUploadStateClicked} /></Box>
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Download State">
+          <IconButton color='primary' onClick={handleDownloadStateClicked} >
+            <CloudDownloadIcon></CloudDownloadIcon>
+          </IconButton>
+        </Tooltip>
+        <Link href="https://github.com/fredsson/tydlig-tid" target="_blank" ><IconButton><GitHubIcon/></IconButton></Link>
+      </Box>
       <Typography sx={{textAlign: 'center'}} variant="h2">Tydlig Tid</Typography>
       <Box sx={{ my: 3, mx: 2}}>
         <AddActivityForm activities={availableActivities} onActivityAdded={handleActivityAdded} />

@@ -11,12 +11,28 @@ import EditActivityDialog, { CloseAction } from '../edit-activity-dialog/edit-ac
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import GitHubIcon from '@mui/icons-material/GitHub';
+import { SchedulerService } from '../../services/scheduler-service';
 
 const stateRecorder = new StateRecorder(createDate);
+const schedulerService = new SchedulerService();
+
+function colorBasedOnTimeSinceBreak(minutesSinceLastBreak: number) {
+  if (minutesSinceLastBreak < 30) {
+    return 'auto';
+  }
+
+  if (minutesSinceLastBreak < 60) {
+    return '#ed6c02';
+  }
+
+  return '#d32f2f';
+}
 
 export default function App() {
   const [activities, setActivities] = useState<PerformedActivity[]>([]);
   const [workedHours, setWorkedHours] = useState(0);
+  const [minutesSinceBreak, setMinutesSinceBreak] = useState(0);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const [editOpen, setEditOpen] = useState(false);
   const [editActivity, setEditActivity] = useState<PerformedActivity | null>(null);
   const uploadStateInputRef = useRef<HTMLInputElement>(null);
@@ -79,6 +95,14 @@ export default function App() {
 
   useEffect(() => {
     setActivities(stateRecorder.getTimelineForToday());
+
+    const subscription = schedulerService.runOnceEvery(() => {
+      setCurrentTime(new Date());
+    }, 60 * 1000);
+
+    return () => {
+      subscription();
+    };
   }, []);
 
   useEffect(() => {
@@ -91,6 +115,17 @@ export default function App() {
 
     setWorkedHours(roundedHours);
   }, [activities]);
+
+  useEffect(() => {
+    const lastBreak = activities.findLast(v => [1, 2].includes(v.activity.id));
+    if (lastBreak) {
+      const diff = createDate().diff(lastBreak.endTime, 'minutes');
+      setMinutesSinceBreak(diff);
+    }
+
+
+    console.log('time since last break runs here!');
+  }, [activities, currentTime])
 
   const availableActivities = stateRecorder.getAvailableActivities();
 
@@ -120,6 +155,7 @@ export default function App() {
           Today ({workedHours}h)
           <Button sx={{marginLeft: '2rem'}} variant="contained" onClick={handleNewDay}>New Day</Button>
         </Typography>
+        <Typography variant='subtitle1' color={colorBasedOnTimeSinceBreak(minutesSinceBreak)} >Last break {minutesSinceBreak} minutes ago</Typography>
         <List sx={{minWidth: '30rem'}}>
           { activities.map((a, index) => (<div key={a.id}>
             {index === 0 ? <Divider /> : ''}

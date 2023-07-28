@@ -117,7 +117,7 @@ export default function App() {
   }, [activities]);
 
   useEffect(() => {
-    const lastBreak = activities.findLast(v => [1, 2].includes(v.activity.id));
+    const lastBreak = activities.slice(0).reverse().find(v => [1, 2].includes(v.activity.id));
     if (lastBreak) {
       const diff = createDate().diff(lastBreak.endTime, 'minutes');
       setMinutesSinceBreak(diff);

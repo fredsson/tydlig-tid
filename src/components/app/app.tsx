@@ -117,10 +117,18 @@ export default function App() {
   }, [activities]);
 
   useEffect(() => {
+    if (!activities.length) {
+      setMinutesSinceBreak(0);
+      return;
+    }
+
     const lastBreak = activities.slice(0).reverse().find(v => [1, 2].includes(v.activity.id));
     if (lastBreak) {
       const diff = createDate().diff(lastBreak.endTime, 'minutes');
       setMinutesSinceBreak(diff);
+    } else {
+      const timeSinceFirstActivity = createDate().diff(activities[0].startTime);
+      setMinutesSinceBreak(timeSinceFirstActivity);
     }
   }, [activities, currentTime])
 

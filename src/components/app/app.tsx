@@ -122,9 +122,6 @@ export default function App() {
       const diff = createDate().diff(lastBreak.endTime, 'minutes');
       setMinutesSinceBreak(diff);
     }
-
-
-    console.log('time since last break runs here!');
   }, [activities, currentTime])
 
   const availableActivities = stateRecorder.getAvailableActivities();

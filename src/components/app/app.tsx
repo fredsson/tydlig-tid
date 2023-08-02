@@ -127,7 +127,7 @@ export default function App() {
       const diff = createDate().diff(lastBreak.endTime, 'minutes');
       setMinutesSinceBreak(diff);
     } else {
-      const timeSinceFirstActivity = createDate().diff(activities[0].startTime);
+      const timeSinceFirstActivity = createDate().diff(activities[0].startTime, 'minutes');
       setMinutesSinceBreak(timeSinceFirstActivity);
     }
   }, [activities, currentTime])
